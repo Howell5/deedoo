@@ -180,6 +180,12 @@ export interface RunProfileOptions {
   patchFiles: readonly string[]
   /** The invocation's inner arguments, handed to the tree through `ctx.cmdlineArgs`. */
   args: readonly string[]
+  /**
+   * Whether to mount the source-oriented profile patch watchers after boot.
+   * Defaults to true. Packaged Electron Utility Processes disable this because
+   * Electron intentionally strips the Node internals flag HMR requires.
+   */
+  watchProfileChanges?: boolean
 }
 
 /**
@@ -265,7 +271,8 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // landed mid-setup. Watching is unconditional: a one-shot surface exits
   // through its bounded shutdown, which disposes the watchers before the
   // loop drains.
-  if (!signalShutdown.signal.aborted
+  if (options.watchProfileChanges !== false
+    && !signalShutdown.signal.aborted
     && ctx.fiber.state === FiberState.ACTIVE
     && ctx.get('loader') !== undefined) {
     try {

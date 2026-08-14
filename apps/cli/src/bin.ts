@@ -34,6 +34,9 @@ switch (invocation.mode) {
       profile: invocation.profile,
       patchFiles: invocation.patches,
       args: invocation.args,
+      // Packaged Electron applications cannot pass the Node internals flag
+      // Cordis HMR requires. Desktop profile edits take effect after restart.
+      watchProfileChanges: process.env.DSH_DESKTOP !== '1',
     })
     break
   }
