@@ -10,7 +10,7 @@ Deedoo needs one public destination that explains and distributes the desktop ap
 
 ## Decision
 
-**The product home and plugin directory are one TanStack Start application.** `/` presents Deedoo and links to desktop builds, while `/plugins` and `/plugins/:owner/:repo` provide discovery and detail pages under the same identity. Cloudflare Workers renders the application and serves its static assets. The shared deployment avoids a second subdomain, repository, and design system while the two experiences remain small and closely related.
+**The product home and plugin directory are one TanStack Start application.** `/` presents Deedoo and links to desktop builds, while `/plugins` and `/plugins/:owner/:repo` provide discovery and detail pages under the same identity. Cloudflare Workers renders the application and serves its static assets, and Wrangler deploys the application directly to Cloudflare. ChatGPT Sites is not a fallback unless the user explicitly requests it. The shared deployment avoids a second subdomain, repository, and design system while the two experiences remain small and closely related.
 
 **The initial catalog is GitHub-first and review-curated.** [`apps/site/registry/plugins.json`](../../../../apps/site/registry/plugins.json) records public repositories, editorial descriptions, categories, and install specifications. A scheduled workflow refreshes stars, forks, language, license, and activity every six hours. The default ranking uses GitHub stars; visitors can also sort by update time or listing date. A listing disclaimer states that collection is not a security review, compatibility guarantee, or endorsement.
 

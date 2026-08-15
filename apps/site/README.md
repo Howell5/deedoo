@@ -32,7 +32,7 @@ The scheduled [GitHub workflow](../../.github/workflows/site-plugin-sync.yml) re
 
 ## Deployment
 
-[`wrangler.jsonc`](wrangler.jsonc) configures the TanStack Start server entry for Cloudflare Workers and Static Assets. `pnpm --filter @deepseek-ai/dsh-site deploy` builds and deploys through Wrangler after Cloudflare authentication.
+[`wrangler.jsonc`](wrangler.jsonc) configures the TanStack Start server entry for Cloudflare Workers and Static Assets. `pnpm --filter @deepseek-ai/dsh-site deploy` builds and deploys directly through Wrangler after Cloudflare authentication. Cloudflare is the default and owning host; ChatGPT Sites is not a deployment fallback unless the user explicitly requests it.
 
 ## Limitations
 
