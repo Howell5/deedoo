@@ -3,5 +3,11 @@
   "name": "deedoo-site",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  "routes": [
+    {
+      "pattern": "deedoo.willhong.dev",
+      "custom_domain": true
+    }
+  ]
 }
