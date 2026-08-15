@@ -56,6 +56,8 @@ allowBuilds:
   # Squirrel's optional Windows helper is present in Electron Builder's
   # dependency graph, but this app ships NSIS and does not run that helper.
   electron-winstaller: false
+  # Cloudflare's local Workers runtime installs its platform-specific binary.
+  workerd: true
 
 minimumReleaseAgeExclude:
   # Fresh pi-ai releases carry the model catalog updates that are the whole
@@ -70,6 +72,18 @@ minimumReleaseAgeExclude:
   - node-addon-require-builtin-win32-ia32-msvc@0.1.4
   - node-addon-require-builtin-win32-x64-msvc@0.1.4
   - node-addon-require-builtin@0.1.4
+  - '@tanstack/react-router@1.170.29'
+  - '@tanstack/react-start-client@1.168.27'
+  - '@tanstack/react-start-rsc@0.1.45'
+  - '@tanstack/react-start-server@1.167.34'
+  - '@tanstack/react-start@1.168.46'
+  - '@tanstack/router-core@1.171.24'
+  - '@tanstack/router-generator@1.167.30'
+  - '@tanstack/router-plugin@1.168.32'
+  - '@tanstack/start-client-core@1.170.24'
+  - '@tanstack/start-plugin-core@1.171.36'
+  - '@tanstack/start-server-core@1.169.28'
+  - '@tanstack/start-storage-context@1.167.26'
 
 patchedDependencies:
   node-pty@1.1.0: patches/node-pty@1.1.0.patch

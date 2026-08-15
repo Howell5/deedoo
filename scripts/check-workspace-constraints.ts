@@ -54,6 +54,7 @@ const localArtifactDirs = new Set(['node_modules'])
 const appPackageFiles: Readonly<Record<string, readonly string[]>> = {
   '@deepseek-ai/dsh': ['lib/*.js', 'config'],
   '@deepseek-ai/dsh-desktop': ['assets', 'lib', 'package.json'],
+  '@deepseek-ai/dsh-site': ['dist', '!dist/**/*.map'],
   // The Web build emits sourcemaps for browser debugging; publishing them is
   // what the payload policy forbids, so the bundle ships without them.
   '@deepseek-ai/dsh-web-frontend': ['dist', '!dist/**/*.map'],
