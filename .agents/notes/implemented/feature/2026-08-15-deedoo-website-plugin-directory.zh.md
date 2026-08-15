@@ -10,7 +10,7 @@ Deedoo 需要一个能够介绍并分发桌面应用的公开入口。DeepSeek H
 
 ## 决策
 
-**产品首页和插件目录由同一个 TanStack Start 应用承载。** `/` 介绍 Deedoo 并链接到桌面构建，`/plugins` 和 `/plugins/:owner/:repo` 则在同一产品身份下提供发现与详情页面。Cloudflare Workers 渲染应用并提供静态资源，Wrangler 直接把应用部署到 Cloudflare。除非用户明确要求，否则 ChatGPT Sites 不作为回退。在两类体验规模都较小且紧密相关的阶段，共用部署无需维护第二个子域名、代码仓库和设计系统。
+**产品首页和插件目录由同一个 TanStack Start 应用承载。** `/` 介绍 Deedoo 并链接到桌面构建，`/plugins` 和 `/plugins/:owner/:repo` 则在同一产品身份下提供发现与详情页面。Cloudflare Workers 在 `deedoo.willhong.dev` 渲染应用并提供静态资源，直接部署和 Custom Domain 由 Wrangler 持有。除非用户明确要求，否则 ChatGPT Sites 不作为回退。在两类体验规模都较小且紧密相关的阶段，共用部署无需维护第二个应用、代码仓库和设计系统。
 
 **初始目录以 GitHub 为主要信源，并通过评审整理。** [`apps/site/registry/plugins.json`](../../../../apps/site/registry/plugins.json) 记录公开代码仓库、编辑后的描述、分类和安装参数。定时工作流每六小时刷新 Star 数、Fork 数、主要语言、许可证和活动时间。默认排名使用 GitHub Star 数，访客还可按更新时间或收录时间排序。页面免责声明明确说明，收录不代表安全审查、兼容性保证或官方背书。
 

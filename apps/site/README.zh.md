@@ -32,7 +32,7 @@ pnpm site:build
 
 ## 部署
 
-[`wrangler.jsonc`](wrangler.jsonc) 为 Cloudflare Workers 和 Static Assets 配置 TanStack Start 服务端入口。完成 Cloudflare 身份验证后，`pnpm --filter @deepseek-ai/dsh-site deploy` 会直接通过 Wrangler 构建并部署网站。Cloudflare 是默认且持有部署的托管平台；除非用户明确要求，否则 ChatGPT Sites 不作为部署回退。
+[`wrangler.jsonc`](wrangler.jsonc) 为 Cloudflare Workers 配置 TanStack Start 服务端入口、Static Assets 和生产自定义域名 `deedoo.willhong.dev`。完成 Cloudflare 身份验证后，`pnpm --filter @deepseek-ai/dsh-site deploy` 会直接通过 Wrangler 构建并部署网站。Cloudflare 是默认且持有部署的托管平台；除非用户明确要求，否则 ChatGPT Sites 不作为部署回退。
 
 ## 局限
 
