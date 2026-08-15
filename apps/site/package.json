@@ -1,0 +1,53 @@
+{
+  "name": "@deepseek-ai/dsh-site",
+  "description": "Deedoo product website and DeepSeek Harness plugin directory",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "apps/site"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy",
+    "sync:github": "tsx scripts/sync-github.ts",
+    "cf-typegen": "wrangler types",
+    "postinstall": "WRANGLER_LOG=warn npm run --silent cf-typegen"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.170.29",
+    "@tanstack/react-start": "^1.168.46",
+    "lucide-react": "^1.31.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.29.0",
+    "@openai/sites-vite-plugin": "0.1.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22.5.4",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.23.12",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.8",
+    "wrangler": "^4.74.0"
+  }
+}
