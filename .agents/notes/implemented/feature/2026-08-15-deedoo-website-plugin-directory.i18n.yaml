@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-15-deedoo-website-plugin-directory.md
-2026-08-15-deedoo-website-plugin-directory.md: 3dfbc16d24c7fd40e085821e4d6b6dd5ed6f8513
-2026-08-15-deedoo-website-plugin-directory.zh.md: de4b841a9a0ed08ffa34186eccb9455d7d5130ea
+2026-08-15-deedoo-website-plugin-directory.md: 1623c4c0081f2c1f3014ecc3268556287da8906b
+2026-08-15-deedoo-website-plugin-directory.zh.md: 2cc624918fc575f4ea79815a12aca7beb9ad3d05

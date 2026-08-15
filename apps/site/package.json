@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.29.0",
-    "@openai/sites-vite-plugin": "0.1.0",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22.5.4",
     "@types/react": "^19.0.8",

@@ -56,6 +56,8 @@ website/     VitePress projection of selected bilingual docs/ sources
 
 Package groups: [packages/README.md](packages/README.md).
 
+The Deedoo website deploys directly to Cloudflare Workers through Wrangler. Do not use ChatGPT Sites unless the user explicitly requests it.
+
 ## Commands
 
 ```sh
