@@ -145,7 +145,8 @@
     "dev:web": "tsx scripts/dev-web.ts --poll",
     "dev:desktop": "pnpm run build:desktop && pnpm --filter @deepseek-ai/dsh-desktop run dev",
     "package:desktop": "pnpm run build:desktop && pnpm --filter @deepseek-ai/dsh-desktop run package",
-    "postinstall": "node scripts/install-lefthook.mjs"
+    "postinstall": "node scripts/install-lefthook.mjs",
+    "update:check": "tsx scripts/deedoo-update/check-upstream.ts"
   },
   "devDependencies": {
     "@agentclientprotocol/sdk": "0.25.1",
