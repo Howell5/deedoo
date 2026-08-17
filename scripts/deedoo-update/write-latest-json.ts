@@ -37,7 +37,11 @@ function parseArgv(argv: readonly string[]): Record<string, string> {
   const out: Record<string, string> = {}
   for (const arg of argv) {
     const match = /^--([a-z-]+)=(.+)$/.exec(arg)
-    if (match !== null) out[match[1]] = match[2]
+    if (match !== null) {
+      const key = match[1]
+      const value = match[2]
+      if (key !== undefined && value !== undefined) out[key] = value
+    }
   }
   return out
 }

@@ -90,7 +90,9 @@ function parseArgv(argv: readonly string[]): { upstream?: string; current?: stri
   for (const arg of argv) {
     const match = /^--(upstream|current)=(.+)$/.exec(arg)
     if (match !== null) {
-      overrides[match[1] as 'upstream' | 'current'] = match[2]
+      const key = match[1] as 'upstream' | 'current'
+      const value = match[2]
+      if (value !== undefined) overrides[key] = value
     }
   }
   return overrides
