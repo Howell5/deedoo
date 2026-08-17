@@ -117,7 +117,31 @@ function createWindow(): BrowserWindow {
   void window.loadFile(startupPage)
   mainWindow = window
   if (backendUrl !== undefined) void window.loadURL(backendUrl)
+  injectVersionMeta(window)
   return window
+}
+
+/**
+ * Publish the packaged app version to the renderer as a meta tag the
+ * settings-footer update indicator reads (`settings.footer` owner props).
+ * Re-injected on every navigation to survive same-page transitions.
+ */
+function injectVersionMeta(window: BrowserWindow): void {
+  const version = app.getVersion()
+  window.webContents.on('did-finish-load', () => {
+    void window.webContents.executeJavaScript(
+      `(() => {
+        const existing = document.querySelector('meta[name="dsh-version"]')
+        if (existing === null) {
+          const meta = document.createElement('meta')
+          meta.setAttribute('name', 'dsh-version')
+          meta.setAttribute('content', ${JSON.stringify(version)})
+          document.head.appendChild(meta)
+        }
+      })()`,
+      true,
+    ).catch(() => { /* navigation aborted before a document existed */ })
+  })
 }
 
 function showStartupPage(): void {

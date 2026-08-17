@@ -90,10 +90,23 @@ function SettingsPanel({ rows, renderSlot, activeId, onSelect, onClose }: PanelP
           <div className={css.options}>
             {active !== undefined && renderSlot('settings.section', { close: onClose }, { only: active })}
           </div>
+          <div className={css.footer}>
+            {renderSlot('settings.footer', { currentVersion: packagedVersion() })}
+          </div>
         </div>
       </div>
     </div>
   )
+}
+
+/**
+ * The version packaged in the running app. The desktop shell injects
+ * `<meta name="dsh-version" content="x.y.z">` into its startup page; the
+ * web-only mode has no such tag and falls back to '0.0.0' (unknown), under
+ * which any published release reads as an update.
+ */
+function packagedVersion(): string {
+  return document.querySelector('meta[name="dsh-version"]')?.getAttribute('content') ?? '0.0.0'
 }
 
 /**

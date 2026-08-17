@@ -72,6 +72,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'settings.onboarding': { kind: 'list'; scope: 'root'; owner: SettingsOnboardingOwnerProps }
     /**
+     * The settings panel footer seat, rendered at the bottom of the content
+     * column (bottom-right). Registrants own visibility and copy; the shell
+     * supplies only the render site and the packaged version string.
+     */
+    'settings.footer': { kind: 'single'; scope: 'root'; owner: SettingsFooterOwnerProps }
+
+    /**
      * One preference row inside the General section — the additive seat for a
      * single setting that needs no page of its own (a whole page is
      * `settings.section`), contributed by the feature plugin that owns the
@@ -132,4 +139,10 @@ export interface SettingsOnboardingOwnerProps {
   complete: () => void
   /** Open the settings panel directly on one registered section. */
   openSection: (id: string) => void
+}
+
+/** Owner share of the settings panel footer (bottom-right). */
+export interface SettingsFooterOwnerProps {
+  /** Version packaged in the running app; '0.0.0' when unknown (web mode). */
+  currentVersion: string
 }
