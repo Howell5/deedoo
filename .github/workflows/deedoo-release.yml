@@ -120,7 +120,8 @@ jobs:
           PRERELEASE=""
           if [[ "$TARGET" == *-* ]]; then PRERELEASE="--prerelease"; fi
           gh release create "v$TARGET" --title "$TARGET" --generate-notes $PRERELEASE
-          echo "url=$(gh release view "v$TARGET" --json htmlUrl --jq .htmlUrl)" >> "$GITHUB_OUTPUT"
+          # Deterministic release URL: no second API call, no consistency window.
+          echo "url=https://github.com/${{ github.repository }}/releases/tag/v$TARGET" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts and latest.json
         if: steps.decision.outputs.updateAvailable == 'true' && inputs.dry-run != true
