@@ -148,6 +148,7 @@ export function apply(ctx: ClientContext): void {
       'settings.close': { kind: 'single', scope: 'root' },
       'settings.section': { kind: 'list', scope: 'root' },
       'settings.onboarding': { kind: 'list', scope: 'root' },
+      'settings.footer': { kind: 'single', scope: 'root' },
     },
     inject: shellInjected,
   }, SettingsRoot))

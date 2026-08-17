@@ -1,0 +1,35 @@
+/* Settings-footer update indicator styling. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--dsw-alias-font-family-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+  text-decoration: none;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 999px;
+  padding: 4px 12px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.badge:hover {
+  color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-interactive-border-hover);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dsw-alias-state-warn-primary);
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.25; }
+}
+
+.arrow {
+  font-size: 12px;
+}

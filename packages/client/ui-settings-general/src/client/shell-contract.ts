@@ -55,5 +55,6 @@ export type SettingsRootComponentProps =
     | 'settings.close'
     | 'settings.section'
     | 'settings.onboarding'
+    | 'settings.footer'
   >
   & InjectFace<SettingsRootInjected>
