@@ -136,5 +136,5 @@ jobs:
           node --import tsx/esm scripts/deedoo-update/write-latest-json.ts \
             --version="$TARGET" \
             --release-url="${{ steps.release.outputs.url }}" \
-            --output=apps/desktop/release/latest.json
-          gh release upload "v$TARGET" apps/desktop/release/*.dmg apps/desktop/release/*.zip apps/desktop/release/latest.json --clobber
+            --output=apps/desktop/dist/release/latest.json
+          gh release upload "v$TARGET" apps/desktop/dist/release/*.dmg apps/desktop/dist/release/*.zip apps/desktop/dist/release/latest.json --clobber
