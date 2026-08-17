@@ -98,7 +98,11 @@ jobs:
 
       - name: Build desktop artifacts
         if: steps.decision.outputs.updateAvailable == 'true' && inputs.dry-run != true
-        run: pnpm run build:desktop
+        run: |
+          # build:desktop produces lib/web but not installers; package runs
+          # stage + electron-builder and emits DMG/ZIP into apps/desktop/release.
+          pnpm run build:desktop
+          pnpm --filter @deepseek-ai/dsh-desktop run package
 
       - name: Commit version bump
         if: steps.decision.outputs.updateAvailable == 'true' && inputs.dry-run != true
