@@ -15,13 +15,18 @@
 
 ## macOS 首次安装（Gatekeeper）
 
-未签名应用首次打开会被 Gatekeeper 拦截：
+未签名应用首次打开会被 Gatekeeper 拦截。发布产物一律做 ad-hoc 签名（零成本），
+签名有效、但身份不受信任，所以首次安装走"无法验证开发者"的右键打开路径：
 
 1. 下载 `Deedoo-*.dmg`，双击挂载，把应用拖入"应用程序"
 2. 首次打开：Finder 中找到应用 → **右键（或按住 Control 点击）→ 打开**
 3. 在弹出的对话框点 **"打开"** —— 之后正常双击即可
 
 > 不要双击就弹"无法打开，因为无法验证开发者"——右键打开是绕过验证的官方路径。
+> 不要完全跳过签名（`CSC_IDENTITY_AUTO_DISCOVERY=false` 且不设 `mac.identity`）：
+> Electron 二进制自带 linker 的 ad-hoc 签名，但 bundle 没有 `_CodeSignature` 封存，
+> 签名状态是"无效"而非"未签名"，Gatekeeper 会直接报"应用已损坏，移到废纸篓"。
+> `mac.identity: "-"` + `hardenedRuntime: false` 是零成本分发必须的配置。
 
 ## Windows 首次安装（SmartScreen）
 
@@ -33,7 +38,7 @@
 
 | 项 | 决策 |
 |---|---|
-| 发布形态 | 未签名 / ad-hoc，直接下载 + 包管理器渠道 |
+| 发布形态 | ad-hoc 签名（`mac.identity: "-"`），直接下载 + 包管理器渠道 |
 | macOS | 不买 Developer ID（$99/年）——Gatekeeper 右键打开说明兜底 |
 | Windows | 不买 Authenticode 证书——SmartScreen 说明兜底；后续可用 Azure Trusted Signing 按量补 |
 | 升级触发条件 | ① 每周都听到有人问"为什么有警告" ② 企业/采购开始把"是否签名"当合规项 |

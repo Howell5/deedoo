@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-18-adhoc-sign-macos-release-artifacts.md
+2026-08-18-adhoc-sign-macos-release-artifacts.md: 30bc271472310c913e9b37b90cc334ac8a24c26a
+2026-08-18-adhoc-sign-macos-release-artifacts.zh.md: 3772d90f337a3859ad4aeeeeb49762c39b312b81

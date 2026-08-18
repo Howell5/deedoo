@@ -13,7 +13,7 @@
 # - detection source: npm dist-tag "latest"
 # - comparison: semver strict greater-than (rc-aware)
 # - release tag: v<target>, prerelease when the target is a prerelease
-# - artifacts: unsigned DMG + ZIP (CSC_IDENTITY_AUTO_DISCOVERY=false)
+# - artifacts: ad-hoc signed DMG + ZIP (mac.identity "-" + hardenedRuntime off)
 name: deedoo-release
 
 on:
@@ -35,8 +35,10 @@ concurrency:
 
 env:
   PRIMARY_NODE_VERSION: '24'
-  # No paid signing at launch: build unsigned so Gatekeeper/SmartScreen
-  # click-through applies, per the zero-cost distribution decision.
+  # No paid signing at launch: electron-builder ad-hoc signs (mac.identity
+  # "-") so Gatekeeper/SmartScreen click-through applies. Leaving auto-
+  # discovery off keeps a stray local keychain identity from hijacking the
+  # zero-cost distribution decision.
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
 jobs:

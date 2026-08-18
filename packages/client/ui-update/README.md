@@ -1,3 +1,5 @@
+English | [中文](README.zh.md)
+
 # @deepseek-ai/dsh-client-ui-update
 
 Settings-footer update indicator for the Deedoo desktop shell.
