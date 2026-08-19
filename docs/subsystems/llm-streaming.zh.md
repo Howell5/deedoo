@@ -28,7 +28,7 @@ interface ContentBlockMap {
 }
 ```
 
-各块接口（完整字段见源码）：`TextBlock`（`text`）、`ReasoningBlock`（thinking，区别于可见文本）、`ImageBlock`（一个持久的[图片附件](attachment.md)）、`ToolCallBlock`（`id: CallId`、`name`、原始 JSON `arguments`），以及 `ToolResultBlock`（`toolCallId`、嵌套 `content: ContentBlock[]`、`isError?`）。`ContentBlock = ContentBlockMap[ContentBlockType]`。仅当适配器、UI、压缩（compaction）和持久回放路径均支持某种新模态时，才将其纳入可合并扩展的 map。
+各块接口（完整字段见源码）：`TextBlock`（`text`）、`ReasoningBlock`（thinking，区别于可见文本）、`ImageBlock`（一个持久的[图片附件](attachment.md)，可带供纯文本路由使用的持久视觉描述）、`ToolCallBlock`（`id: CallId`、`name`、原始 JSON `arguments`），以及 `ToolResultBlock`（`toolCallId`、嵌套 `content: ContentBlock[]`、`isError?`）。`ContentBlock = ContentBlockMap[ContentBlockType]`。仅当适配器、UI、压缩（compaction）和持久回放路径均支持某种新模态时，才将其纳入可合并扩展的 map。
 
 源码：[`packages/llm/llm/src/message.ts`](../../packages/llm/llm/src/message.ts)
 
@@ -501,7 +501,7 @@ interface GenerateOptions {
    * map the purpose to model-hidden transport metadata or purpose-specific
    * generation policy. Ordinary conversation requests leave it unset.
    */
-  purpose?: 'compaction' | 'session-title'
+  purpose?: 'compaction' | 'session-title' | 'vision'
 }
 ```
 
@@ -842,6 +842,25 @@ stream(options: GenerateOptions): AsyncIterable<StreamChunk>
 ```
 
 Source: [`packages/llm/llm/src/index.ts:284`](../../packages/llm/llm/src/index.ts)
+
+<a id="ctxvisionsidecar--visionsidecarservice"></a>
+
+### `ctx.visionSidecar` — `VisionSidecarService`
+
+The optional admission face consumed by Host and filesystem image gates.
+
+```ts cordis-catalog
+/**
+ * Report whether the configured sidecar route is currently image-capable.
+ * @param provider - main conversation provider route.
+ * @param model - main conversation model id.
+ * @param signal - optional cancellation for route metadata resolution.
+ * @returns whether image input can be transformed for the main route.
+ */
+canAcceptImage(provider: string, model: string, signal?: AbortSignal): Promise<boolean>
+```
+
+Source: [`packages/llm/llm-vision-sidecar/src/index.ts:65`](../../packages/llm/llm-vision-sidecar/src/index.ts)
 
 <a id="llm-events"></a>
 

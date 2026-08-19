@@ -146,6 +146,51 @@ describe('serializeMessages', () => {
     })])).toThrow(expect.objectContaining({ code: 'UNSUPPORTED_CONTENT' }))
   })
 
+  it('serializes a durable vision description on the text-only route', () => {
+    const wire = serializeMessages([createUserMessage({
+      content: [{
+        type: 'image',
+        attachment: {
+          attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`),
+          mediaType: 'image/png', bytes: 68, width: 1, height: 1,
+        },
+        vision: { provider: 'glm-vision', model: 'glm-4v-flash', text: 'a blue square' },
+      }],
+      source: { kind: 'plugin', plugin: 'test' },
+    })])
+    expect(wire).toEqual([{
+      role: 'user',
+      content: '\n[Image description]\na blue square\n[/Image description]\n',
+    }])
+  })
+
+  it('flattens nested tool-result content on the text-only route', () => {
+    const wire = serializeMessages([createUserMessage({
+      content: [{
+        type: 'tool-result',
+        toolCallId: CallId('outer-call'),
+        content: [{
+          type: 'tool-result',
+          toolCallId: CallId('inner-call'),
+          content: [{
+            type: 'image',
+            attachment: {
+              attachmentId: AttachmentId(`sha256:${'b'.repeat(64)}`),
+              mediaType: 'image/png', bytes: 68, width: 1, height: 1,
+            },
+            vision: { provider: 'glm-vision', model: 'glm-4v-flash', text: 'nested square' },
+          }],
+        }],
+      }],
+      source: { kind: 'plugin', plugin: 'test' },
+    })])
+    expect(wire).toEqual([{
+      role: 'tool',
+      tool_call_id: 'outer-call',
+      content: '\n[Image description]\nnested square\n[/Image description]\n',
+    }])
+  })
+
   it('emits an empty user message rather than dropping block-less messages', () => {
     const wire = serializeMessages([createUserMessage({
       content: [],

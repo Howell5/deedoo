@@ -234,6 +234,68 @@ describe('Web session model selection', () => {
     await ctx.fiber.dispose()
   })
 
+  it('allows a text-only selection when the configured vision sidecar accepts it', async () => {
+    const { ctx, agent, sessionId } = await harness()
+    registerTextOnly(ctx)
+    const canAcceptImage = vi.fn(async () => true)
+    ctx.provide('visionSidecar', { canAcceptImage })
+    const api = createApiProxy(ctx, {
+      defaultModelSelection: () => ({ provider: 'deepseek-official', model: 'deepseek-chat' }),
+      cwd: '/tmp',
+    })
+    agent.session.append('user/message', {
+      id: 'sidecar-image-message', role: 'user', source: { kind: 'user' }, content: [{
+        type: 'image',
+        attachment: { attachmentId: 'att-sidecar', mediaType: 'image/png', bytes: 1, width: 1, height: 1 },
+      }],
+    } as never, { surfaceOp: 'append' })
+
+    expect(expectValue(await api.sessions.selectModel(request({
+      sessionId, provider: 'text-only', model: 'plain',
+    }))).selected).toEqual({ provider: 'text-only', model: 'plain' })
+    expect(canAcceptImage).toHaveBeenCalledWith('text-only', 'plain', undefined)
+    await ctx.fiber.dispose()
+  })
+
+  it('admits an incoming image for a text-only selection when the sidecar accepts it', async () => {
+    const { ctx, agent, sessionId } = await harness()
+    registerTextOnly(ctx)
+    ctx.provide('visionSidecar', { canAcceptImage: async () => true })
+    const validateImage = vi.fn((_input: { data: Uint8Array }) => Promise.resolve())
+    const saveImage = vi.fn(() => Promise.resolve({
+      attachmentId: 'att-incoming-sidecar', mediaType: 'image/png' as const,
+      bytes: 1, width: 1, height: 1,
+    }))
+    ctx.provide('attachments', {
+      imageLimits: {
+        maxImageBytes: 4,
+        maxImagesPerMessage: 1,
+        maxMessageImageBytes: 4,
+        maxImagePixels: 4,
+        mediaTypes: ['image/png'],
+      },
+      validateImage,
+      saveImage,
+    } as never)
+    const followup = vi.fn()
+    Object.assign(agent, { followup })
+    const api = createApiProxy(ctx, {
+      defaultModelSelection: () => ({ provider: 'text-only', model: 'plain' }),
+      cwd: '/tmp',
+    })
+
+    const result = await api.sessions.prompt(request({
+      sessionId,
+      mode: 'queue' as const,
+      content: [{ type: 'image', mediaType: 'image/png', data: 'AQ==' }],
+    }))
+    expect(result.result.ok).toBe(true)
+    expect(validateImage).toHaveBeenCalledOnce()
+    expect(saveImage).toHaveBeenCalledOnce()
+    expect(followup).toHaveBeenCalledOnce()
+    await ctx.fiber.dispose()
+  })
+
   it('authorizes attachment bytes only when the session event stream references the id', async () => {
     const { ctx, agent, sessionId } = await harness()
     const ref = {

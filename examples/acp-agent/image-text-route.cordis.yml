@@ -1,9 +1,8 @@
-# Text-route image overlay: the attachment store registers read_image, but the
-# strict execution gate refuses on a route that does not declare image input,
-# so a text-only deployment keeps its durable history text-clean. The app
-# config is restated to re-pin `deepseek-v4-flash` (base ships pro; the
-# authored fixture and the pinned header class are flash), because a config
-# patch replaces the whole app config.
+# Text-route image overlay: the attachment store registers read_image, while
+# the configured vision sidecar describes the resulting image before the
+# text-only DeepSeek route continues. The app config is restated to re-pin
+# `deepseek-v4-flash` (base ships pro; the authored fixture and the pinned
+# header class are flash), because a config patch replaces the whole app config.
 - id: base
   name: '@deepseek-ai/cordis-plugin-include'
   config:
@@ -25,3 +24,13 @@
       - insert:
           - id: attachment-local
             name: '@deepseek-ai/dsh-attachment-local'
+          - id: llm-vision-sidecar
+            name: '@deepseek-ai/dsh-llm-vision-sidecar'
+            config:
+              enabled: true
+              provider: glm-vision
+              model: glm-4v-flash
+              timeoutMs: 60000
+              maxOutputTokens: 1024
+              maxDescriptionChars: 4000
+              maxImagesPerStep: 8

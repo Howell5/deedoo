@@ -1164,6 +1164,34 @@ export type Config = Readonly<Record<string, never>>
 
 来源：[`packages/llm/llm-retry/src/index.ts:24`](../packages/llm/llm-retry/src/index.ts)
 
+<a id="deepseek-aidsh-llm-vision-sidecar"></a>
+
+## `@deepseek-ai/dsh-llm-vision-sidecar`
+
+需要：`agents` · `llm` · `sessions`
+
+```ts config-catalog
+/** Plugin configuration for one vision sidecar route. */
+export interface Config {
+  /** Whether the sidecar may admit and prepare image input. */
+  enabled: boolean
+  /** Provider route used for image description requests. */
+  provider: string
+  /** Model id used for image description requests. */
+  model: string
+  /** Maximum elapsed time for one description request. */
+  timeoutMs: number
+  /** Output-token ceiling for one description request. */
+  maxOutputTokens: number
+  /** Maximum persisted characters in one description. */
+  maxDescriptionChars: number
+  /** Maximum number of distinct images described during one pre-step. */
+  maxImagesPerStep: number
+}
+```
+
+来源：[`packages/llm/llm-vision-sidecar/src/index.ts:36`](../packages/llm/llm-vision-sidecar/src/index.ts)
+
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
 ## `@deepseek-ai/dsh-lsp-stdio`
@@ -3059,6 +3087,7 @@ export interface Config {
 - `@deepseek-ai/dsh-client-ui-theme`（[`packages/client/ui-theme/src/index.ts`](../packages/client/ui-theme/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-tool`（[`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-trajectory`（[`packages/client/ui-trajectory/src/index.ts`](../packages/client/ui-trajectory/src/index.ts)）
+- `@deepseek-ai/dsh-client-ui-update`（[`packages/client/ui-update/src/index.ts`](../packages/client/ui-update/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-user-questions`（[`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-workflow-run`（[`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-workspace`（[`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts)）

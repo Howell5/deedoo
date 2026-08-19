@@ -1146,6 +1146,32 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     source: 'packages/client/ui-settings/src/client/contract/slots.ts:41',
   },
   {
+    key: 'settings.footer',
+    kind: 'single',
+    scope: 'root',
+    summary: 'The settings panel footer seat, rendered at the bottom of the content column (bottom-right).',
+    doc: 'The settings panel footer seat, rendered at the bottom of the content\ncolumn (bottom-right). Registrants own visibility and copy; the shell\nsupplies only the render site and the packaged version string.',
+    registerOptions: [],
+    ownerProps: [
+      '/** Owner share of the settings panel footer (bottom-right). */\nexport interface SettingsFooterOwnerProps {\n  /** Version packaged in the running app; \'0.0.0\' when unknown (web mode). */\n  currentVersion: string\n}',
+    ],
+    ownerPropsReferences: [],
+    standardProps: [
+      'useSessions: SnapshotSelectorHook<SessionListState>',
+      'useWorkspaces: SnapshotSelectorHook<import(\'./workspaces/service.ts\').WorkspaceListState>',
+    ],
+    keyDomain: '',
+    hookContext: '',
+    slotInject: '',
+    declaredBy: 'an entry in \'sidebar.settings\' (client-ui-settings-general), so it exists while that entry is mounted',
+    occupants: [
+      'client-ui-update UpdateStatus',
+    ],
+    replaceRisk: 'shadows-shipped-ui',
+    example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'settings.footer\', () => ctx.slots.register(\n      { name: \'settings.footer\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
+    source: 'packages/client/ui-settings/src/client/contract/slots.ts:79',
+  },
+  {
     key: 'settings.general.item',
     kind: 'list',
     scope: 'root',
@@ -1192,7 +1218,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
     ],
     replaceRisk: 'none',
     example: 'return {\n  inject: [\'slots\'],\n  apply(ctx) {\n    ctx.slots.inject(\'settings.general.item\', () => ctx.slots.register(\n      { name: \'settings.general.item\', id: \'my-entry\', order: 100, label: \'My entry\' },\n      () => React.createElement(\'div\', null, \'hello\'),\n    ))\n  },\n}',
-    source: 'packages/client/ui-settings/src/client/contract/slots.ts:88',
+    source: 'packages/client/ui-settings/src/client/contract/slots.ts:95',
   },
   {
     key: 'settings.header',

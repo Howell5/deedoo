@@ -4,7 +4,7 @@
  * @module dsh-llm-pi-ai/context
  */
 
-import { CallId, contentHasImage, LlmError } from '@deepseek-ai/dsh-llm'
+import { CallId, contentHasImage, contentHasUnresolvedImage, LlmError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, GenerateOptions, Message } from '@deepseek-ai/dsh-llm'
 import type { AttachmentStore } from '@deepseek-ai/dsh-attachment'
 import type { Context as PiContext, ImageContent, Message as PiMessage, TextContent, Tool as PiTool } from '@earendil-works/pi-ai'
@@ -12,18 +12,23 @@ import { toPiAssistant } from './replay.ts'
 
 /** Join the text blocks of a harness message. */
 function flattenText(message: Message): string {
-  return message.content
-    .filter(block => block.type === 'text')
-    .map(block => block.text)
-    .join('')
+  return flattenContent(message.content)
 }
 
+function flattenContent(blocks: readonly ContentBlock[], includeToolResults = false): string {
+  return blocks.map((block) => {
+    if (block.type === 'text') return block.text
+    if (block.type === 'image' && block.vision !== undefined) {
+      return `\n[Image description]\n${block.vision.text}\n[/Image description]\n`
+    }
+    if (block.type === 'tool-result') return includeToolResults ? flattenContent(block.content, true) : ''
+    return ''
+  }).join('')
+}
 
 /** Flatten text recursively inside one tool result. */
 function toolResultText(blocks: readonly ContentBlock[]): string {
-  return blocks.map(block => block.type === 'text'
-    ? block.text
-    : block.type === 'tool-result' ? toolResultText(block.content) : '').join('')
+  return flattenContent(blocks, true)
 }
 
 async function userContent(
@@ -37,6 +42,12 @@ async function userContent(
         if (block.text.length > 0) content.push({ type: 'text', text: block.text })
         break
       case 'image': {
+        if (block.vision !== undefined) {
+          content.push({
+            type: 'text',
+            text: `\n[Image description]\n${block.vision.text}\n[/Image description]\n`,
+          })
+        }
         const stored = await attachments.readImage(block.attachment)
         content.push({
           type: 'image',
@@ -88,7 +99,7 @@ function textOnlyContext(options: GenerateOptions): PiContext {
   const toolNames = new Map<CallId, string>()
   const messages: PiMessage[] = []
   for (const message of options.messages) {
-    if (contentHasImage(message.content)) {
+    if (contentHasUnresolvedImage(message.content)) {
       throw new LlmError('pi-ai image conversion requires the durable attachment service', 'UNSUPPORTED_CONTENT')
     }
     if (message.role === 'system') {
@@ -122,7 +133,8 @@ function textOnlyContext(options: GenerateOptions): PiContext {
 }
 
 /**
- * Convert text-only harness history to a synchronous pi-ai Context. Tool
+ * Convert text-only harness history to a synchronous pi-ai Context. Sidecar
+ * descriptions are flattened as text; unresolved images are rejected. Tool
  * result names are recovered from preceding assistant tool calls.
  * @param options - the harness request; `options.system` maps to pi-ai's single `systemPrompt` slot.
  * @returns the pi-ai context; `tools` is omitted when the request declares none.

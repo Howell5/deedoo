@@ -95,6 +95,21 @@
     - id: llm-pi-ai
       name: '@deepseek-ai/dsh-llm-pi-ai'
 
+    # Text-only routes can use this configured image-capable route as a
+    # durable pre-step sidecar. The route itself remains owned by llm-pi-ai;
+    # this plugin reads its declared input modality instead of maintaining a
+    # second model-name capability table.
+    - id: llm-vision-sidecar
+      name: '@deepseek-ai/dsh-llm-vision-sidecar'
+      config:
+        enabled: true
+        provider: glm-vision
+        model: glm-4v-flash
+        timeoutMs: 60000
+        maxOutputTokens: 1024
+        maxDescriptionChars: 4000
+        maxImagesPerStep: 8
+
     - id: session-persistence-jsonl
       name: '@deepseek-ai/dsh-session-persistence-jsonl'
       config:

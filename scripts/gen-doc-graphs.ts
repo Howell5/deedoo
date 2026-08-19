@@ -115,6 +115,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Adapters register provider implementations; the loop and compaction call the provider-neutral stream service.',
   },
   {
+    key: 'visionSidecar',
+    pkg: 'llm-vision-sidecar',
+    title: 'Text-route vision preparation',
+    mode: 'core',
+    consumers: ['host-apiproxy', 'tool-fs'],
+    note: 'Describes unresolved durable images through one configured image-capable route before text-only agent steps; host admission and read_image consult its optional capability face.',
+  },
+  {
     key: 'tokenMeter',
     pkg: 'token-meter',
     title: 'Replay token measurement',

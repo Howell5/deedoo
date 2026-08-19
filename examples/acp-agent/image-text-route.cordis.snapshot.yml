@@ -1,7 +1,7 @@
-# Keyless replay for the read-image refusal scenario: identical to the
-# image.cordis.snapshot.yml overlay except the replay catalog leaves flash
-# text-only, so the strict read_image gate refuses and no image ever enters
-# the durable log.
+# Keyless replay for the text-route vision-sidecar scenario. The replay catalog
+# keeps DeepSeek text-only and adds the configured GLM route as image-capable;
+# the override script supplies the auxiliary GLM description before the two
+# DeepSeek calls, so the durable tool result carries a persisted description.
 - id: base
   name: '@deepseek-ai/cordis-plugin-include'
   config:
@@ -26,6 +26,16 @@
       - insert:
           - id: attachment-local
             name: '@deepseek-ai/dsh-attachment-local'
+          - id: llm-vision-sidecar
+            name: '@deepseek-ai/dsh-llm-vision-sidecar'
+            config:
+              enabled: true
+              provider: glm-vision
+              model: glm-4v-flash
+              timeoutMs: 60000
+              maxOutputTokens: 1024
+              maxDescriptionChars: 4000
+              maxImagesPerStep: 8
           - id: llm-replay
             name: '@deepseek-ai/dsh-llm-replay'
             config:
@@ -37,3 +47,8 @@
                       inputModalities: [text]
                     - id: deepseek-v4-pro
                       inputModalities: [text]
+                - id: glm-vision
+                  name: GLM Vision
+                  models:
+                    - id: glm-4v-flash
+                      inputModalities: [text, image]
