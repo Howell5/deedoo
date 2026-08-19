@@ -276,6 +276,23 @@ describe('strict image-modality gate', () => {
     expect(text(result)).toContain('does not declare image input')
   })
 
+  it('accepts a text-only route when the configured vision sidecar accepts it', async () => {
+    await writeFile(join(dir, 'red.png'), PNG_1X1)
+    const ctx = await setup()
+    ctx.provide('visionSidecar', { canAcceptImage: async () => true })
+    const result = await readImage(ctx, { file_path: 'red.png' }, agentOn('text-model'))
+    expect(result.isError).toBe(false)
+  })
+
+  it('still refuses when an available vision sidecar declines the route', async () => {
+    await writeFile(join(dir, 'red.png'), PNG_1X1)
+    const ctx = await setup()
+    ctx.provide('visionSidecar', { canAcceptImage: async () => false })
+    const result = await readImage(ctx, { file_path: 'red.png' }, agentOn('text-model'))
+    expect(result.isError).toBe(true)
+    expect(text(result)).toContain('no configured vision sidecar is available')
+  })
+
   it('refuses when the route cannot be resolved (no agent, or no header and no options)', async () => {
     await writeFile(join(dir, 'red.png'), PNG_1X1)
     const ctx = await setup()

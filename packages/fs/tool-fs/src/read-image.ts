@@ -17,6 +17,7 @@ import { AttachmentError, AttachmentId } from '@deepseek-ai/dsh-attachment'
 import type { ImageAttachmentRef, ImageMediaType } from '@deepseek-ai/dsh-attachment'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
+import type { VisionSidecarService } from '@deepseek-ai/dsh-llm-vision-sidecar'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, ToolExecution } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-fs'
@@ -56,7 +57,8 @@ export function imageMediaTypeForPath(filePath: string): ImageMediaType | undefi
 /**
  * Enforce the strict image-capability gate for the calling route. Resolves the
  * session's latest routed provider/model (request header config, then agent
- * options) and requires the exact resolved route to declare `image` input explicitly.
+ * options) and requires the exact resolved route to declare `image` input
+ * explicitly or have an available vision sidecar.
  * @param ctx - the plugin context used to resolve the optional `llm` service.
  * @param exec - the tool-execution context supplying the calling agent.
  * @param requestedPath - the raw, not-yet-resolved path rendered in refusal messages.
@@ -71,7 +73,9 @@ export async function assertImageCapableRoute(ctx: Context, exec: ToolExecution,
   }
   const active = await llm.resolveModelInfo(provider, model, exec.signal)
   if (active.inputModalities === undefined || !active.inputModalities.includes('image')) {
-    throw new Error(`cannot read "${requestedPath}" as an image: model "${model}" does not declare image input; switch to an image-capable model to read images`)
+    const sidecar: VisionSidecarService | undefined = ctx.get('visionSidecar')
+    if (sidecar !== undefined && await sidecar.canAcceptImage(provider, model, exec.signal)) return
+    throw new Error(`cannot read "${requestedPath}" as an image: model "${model}" does not declare image input and no configured vision sidecar is available`)
   }
 }
 
@@ -130,7 +134,7 @@ function imageReadContent(value: ImageReadValue): ContentBlock[] {
 export function applyReadImageTool(ctx: Context): void {
   ctx.tools.register(defineTool({
     name: 'read_image',
-    description: 'Read a PNG/JPEG/WebP/GIF file and return the image itself. Requires the current model to accept image input.',
+    description: 'Read a PNG/JPEG/WebP/GIF file and return the image itself. Requires native image input or a configured vision sidecar.',
     parameters: {
       file_path: { type: 'string', required: true, description: 'Path to the image file, resolved by the filesystem backend.' },
     },

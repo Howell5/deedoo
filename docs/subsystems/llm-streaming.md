@@ -28,7 +28,7 @@ interface ContentBlockMap {
 }
 ```
 
-The block interfaces (full fields in source): `TextBlock` (`text`), `ReasoningBlock` (thinking, distinct from visible text), `ImageBlock` (a durable [image attachment](attachment.md)), `ToolCallBlock` (`id: CallId`, `name`, raw-JSON `arguments`), and `ToolResultBlock` (`toolCallId`, nested `content: ContentBlock[]`, `isError?`). `ContentBlock = ContentBlockMap[ContentBlockType]`. A new modality belongs in the merge-extensible map only when its adapter, UI, compaction, and durable replay paths honor it.
+The block interfaces (full fields in source): `TextBlock` (`text`), `ReasoningBlock` (thinking, distinct from visible text), `ImageBlock` (a durable [image attachment](attachment.md), with an optional persisted vision description for text-only routes), `ToolCallBlock` (`id: CallId`, `name`, raw-JSON `arguments`), and `ToolResultBlock` (`toolCallId`, nested `content: ContentBlock[]`, `isError?`). `ContentBlock = ContentBlockMap[ContentBlockType]`. A new modality belongs in the merge-extensible map only when its adapter, UI, compaction, and durable replay paths honor it.
 
 Source: [`packages/llm/llm/src/message.ts`](../../packages/llm/llm/src/message.ts)
 
@@ -495,7 +495,7 @@ interface GenerateOptions {
    * map the purpose to model-hidden transport metadata or purpose-specific
    * generation policy. Ordinary conversation requests leave it unset.
    */
-  purpose?: 'compaction' | 'session-title'
+  purpose?: 'compaction' | 'session-title' | 'vision'
 }
 ```
 
@@ -836,6 +836,25 @@ stream(options: GenerateOptions): AsyncIterable<StreamChunk>
 ```
 
 Source: [`packages/llm/llm/src/index.ts:284`](../../packages/llm/llm/src/index.ts)
+
+<a id="ctxvisionsidecar--visionsidecarservice"></a>
+
+### `ctx.visionSidecar` — `VisionSidecarService`
+
+The optional admission face consumed by Host and filesystem image gates.
+
+```ts cordis-catalog
+/**
+ * Report whether the configured sidecar route is currently image-capable.
+ * @param provider - main conversation provider route.
+ * @param model - main conversation model id.
+ * @param signal - optional cancellation for route metadata resolution.
+ * @returns whether image input can be transformed for the main route.
+ */
+canAcceptImage(provider: string, model: string, signal?: AbortSignal): Promise<boolean>
+```
+
+Source: [`packages/llm/llm-vision-sidecar/src/index.ts:65`](../../packages/llm/llm-vision-sidecar/src/index.ts)
 
 <a id="llm-events"></a>
 

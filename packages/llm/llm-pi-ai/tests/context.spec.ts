@@ -80,6 +80,35 @@ describe('pi-ai request context conversion', () => {
     }])]))).toThrow(/durable attachment service/)
   })
 
+  it('converts a sidecar-enriched image through the text-only path', () => {
+    expect(toPiContext(request([user([{
+      type: 'image',
+      attachment: ref,
+      vision: { provider: 'glm-vision', model: 'glm-4v-flash', text: 'a blue square' },
+    }])]))).toMatchObject({
+      messages: [{
+        role: 'user',
+        content: '\n[Image description]\na blue square\n[/Image description]\n',
+      }],
+    })
+  })
+
+  it('keeps a sidecar description beside the raw image on a native route', async () => {
+    const context = await toPiContext(request([user([{
+      type: 'image',
+      attachment: ref,
+      vision: { provider: 'glm-vision', model: 'glm-4v-flash', text: 'a blue square' },
+    }])]), attachments)
+    expect(context.messages).toEqual([{
+      role: 'user',
+      content: [
+        { type: 'text', text: '\n[Image description]\na blue square\n[/Image description]\n' },
+        { type: 'image', data: 'AQ==', mimeType: 'image/png' },
+      ],
+      timestamp: 0,
+    }])
+  })
+
   it('resolves user and tool-result images while preserving explicit fallbacks', async () => {
     const callId = CallId('missing-call')
     const knownCallId = CallId('known-call')

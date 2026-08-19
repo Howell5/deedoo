@@ -72,6 +72,19 @@ export interface ImageBlock {
   type: 'image'
   /** Immutable bytes and intrinsic display metadata owned by the attachment service. */
   attachment: ImageAttachmentRef
+  /**
+   * A durable description produced by a configured vision sidecar. The raw
+   * attachment remains available for UI rendering and for a later switch to
+   * an image-capable route; text-only adapters consume only this description.
+   */
+  vision?: {
+    /** Provider route that produced the description. */
+    provider: string
+    /** Model id that produced the description. */
+    model: string
+    /** Bounded model-visible description. */
+    text: string
+  }
 }
 
 /** A tool invocation requested by the model. */
@@ -352,5 +365,5 @@ export interface GenerateOptions {
    * map the purpose to model-hidden transport metadata or purpose-specific
    * generation policy. Ordinary conversation requests leave it unset.
    */
-  purpose?: 'compaction' | 'session-title'
+  purpose?: 'compaction' | 'session-title' | 'vision'
 }

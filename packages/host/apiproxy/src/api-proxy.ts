@@ -12,13 +12,14 @@ import type { Agent, ModelSelection, ModelSelectionRef, AgentOptions, AgentStatu
 import type {} from '@deepseek-ai/dsh-agent-presets/types'
 import { AttachmentError } from '@deepseek-ai/dsh-attachment'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { contentHasImage, createUserMessage, freezeMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { contentHasUnresolvedImage, createUserMessage, freezeMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { errorChain } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, MessageSource } from '@deepseek-ai/dsh-llm'
 import { isAppendSurfaceEvent, isJsonValue } from '@deepseek-ai/dsh-session'
 import type { JsonValue, Session, SessionEvent, SessionEventMap, SessionHeader, SessionId, UserMessage } from '@deepseek-ai/dsh-session'
 import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import { SessionQueryError, type SessionSearchCursor } from '@deepseek-ai/dsh-session-query'
+import type { VisionSidecarService } from '@deepseek-ai/dsh-llm-vision-sidecar'
 import { SubagentError } from '@deepseek-ai/dsh-subagent'
 import type { SubagentListEntry as CatalogSubagentListEntry } from '@deepseek-ai/dsh-subagent'
 import { isUserInvocable } from '@deepseek-ai/dsh-skill'
@@ -231,9 +232,15 @@ function imageInEvent(event: SessionEvent, match: (ref: ImageAttachmentRef) => b
   return undefined
 }
 
-/** True when the current model-visible surface contains an image. */
-function messagesHaveImage(messages: readonly { content: readonly ContentBlock[] }[]): boolean {
-  return messages.some(message => contentHasImage(message.content))
+/** True when the current model-visible surface contains an image without a sidecar description. */
+function messagesHaveUnresolvedImage(messages: readonly { content: readonly ContentBlock[] }[]): boolean {
+  return messages.some(message => contentHasUnresolvedImage(message.content))
+}
+
+/** Ask the optional vision sidecar whether a text-only route can accept images. */
+async function sidecarAcceptsImage(ctx: Context, provider: string, model: string, signal?: AbortSignal): Promise<boolean> {
+  const sidecar: VisionSidecarService | undefined = ctx.get('visionSidecar')
+  return sidecar?.canAcceptImage(provider, model, signal) ?? false
 }
 
 /** Resolve the first reference matching one opaque id. */
@@ -2293,13 +2300,15 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
                 : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
             })
             const pendingImage = [...found.agent.inbox.nextTurn, ...found.agent.inbox.nextStep]
-              .some(message => contentHasImage(message.content))
-            if (pendingImage || messagesHaveImage(found.agent.session.deriveMessages())) {
+              .some(message => contentHasUnresolvedImage(message.content))
+            if (pendingImage || messagesHaveUnresolvedImage(found.agent.session.deriveMessages())) {
               const info = await ctx.llm.resolveModelInfo(resolved.provider, resolved.model)
-              if (info.inputModalities !== undefined && !info.inputModalities.includes('image')) {
+              if (info.inputModalities !== undefined
+                && !info.inputModalities.includes('image')
+                && !await sidecarAcceptsImage(ctx, resolved.provider, resolved.model)) {
                 return err(request, {
                   code: 'model-unavailable',
-                  message: `Model "${resolved.model}" does not accept image input, but this session already contains images; select an image-capable model.`,
+                  message: `Model "${resolved.model}" does not accept image input, and no configured vision sidecar can transform this session's images.`,
                   details: { provider, model },
                 })
               }
@@ -2485,10 +2494,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             if (hasImage) {
               const current = selectionFor(agent).current
               const modelInfo = await ctx.llm.resolveModelInfo(current.provider, current.model)
-              if (modelInfo.inputModalities !== undefined && !modelInfo.inputModalities.includes('image')) {
+              if (modelInfo.inputModalities !== undefined
+                && !modelInfo.inputModalities.includes('image')
+                && !await sidecarAcceptsImage(ctx, current.provider, current.model)) {
                 return err(request, {
                   code: 'attachment-error',
-                  message: `Model "${current.model}" does not support image input.`,
+                  message: `Model "${current.model}" does not support image input and no configured vision sidecar is available.`,
                   details: { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
                 })
               }

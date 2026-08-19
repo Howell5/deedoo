@@ -19,6 +19,9 @@
       "path": "../../llm/llm"
     },
     {
+      "path": "../../llm/llm-vision-sidecar"
+    },
+    {
       "path": "../../core/tools"
     },
     {

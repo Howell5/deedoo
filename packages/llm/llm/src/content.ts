@@ -14,3 +14,14 @@ export function contentHasImage(content: readonly ContentBlock[]): boolean {
   return content.some(block => block.type === 'image'
     || (block.type === 'tool-result' && contentHasImage(block.content)))
 }
+
+/**
+ * True when typed model content contains an image without a durable sidecar
+ * description, walking nested tool-result content.
+ * @param content - typed model content blocks.
+ * @returns whether an image still needs native image input or sidecar work.
+ */
+export function contentHasUnresolvedImage(content: readonly ContentBlock[]): boolean {
+  return content.some(block => (block.type === 'image' && block.vision === undefined)
+    || (block.type === 'tool-result' && contentHasUnresolvedImage(block.content)))
+}
