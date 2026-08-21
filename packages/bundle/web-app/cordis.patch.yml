@@ -94,6 +94,9 @@
     - id: plugin-inventory
       name: '@deepseek-ai/dsh-host-plugin-inventory'
 
+    - id: widgets
+      name: '@deepseek-ai/dsh-widgets-local'
+
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
     - id: api-gateway
@@ -182,6 +185,9 @@
 
     - id: ui-sidebar
       name: '@deepseek-ai/dsh-client-ui-sidebar'
+
+    - id: ui-widgets
+      name: '@deepseek-ai/dsh-client-ui-widgets'
 
     - id: ui-settings
       name: '@deepseek-ai/dsh-client-ui-settings'

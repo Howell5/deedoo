@@ -67,6 +67,10 @@ import {
   subagentListValueSchema,
   subagentPromptValueSchema,
 } from '../api/subagents.schema.ts'
+import {
+  widgetCreateValueSchema, widgetFetchValueSchema, widgetInstallValueSchema, widgetListValueSchema,
+  widgetReadValueSchema, widgetRemoveValueSchema,
+} from '../api/widgets.schema.ts'
 
 /**
  * Client consumption face of the contract (shape a): same domain tree as ApiProxy, but unary
@@ -161,6 +165,14 @@ export interface IApiClient {
     models(payload: RequestPayload<'llm.models'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'llm.models'>>>
     discoverModels(payload: RequestPayload<'llm.discoverModels'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'llm.discoverModels'>>>
   }
+  widgets: {
+    list(payload: RequestPayload<'widget.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.list'>>>
+    create(payload: RequestPayload<'widget.create'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.create'>>>
+    read(payload: RequestPayload<'widget.read'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.read'>>>
+    install(payload: RequestPayload<'widget.install'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.install'>>>
+    remove(payload: RequestPayload<'widget.remove'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.remove'>>>
+    fetch(payload: RequestPayload<'widget.fetch'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'widget.fetch'>>>
+  }
   /** client-response passthrough (rpcId is a backfill of the server-request's id — never minted here). */
   respond(message: ClientResponse, signal?: AbortSignal): Promise<RpcReceipt>
 }
@@ -222,6 +234,12 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'llm.providers': llmProvidersValueSchema,
   'llm.models': llmModelsValueSchema,
   'llm.discoverModels': llmDiscoverModelsValueSchema,
+  'widget.list': widgetListValueSchema,
+  'widget.create': widgetCreateValueSchema,
+  'widget.read': widgetReadValueSchema,
+  'widget.install': widgetInstallValueSchema,
+  'widget.remove': widgetRemoveValueSchema,
+  'widget.fetch': widgetFetchValueSchema,
 }
 
 /** Default timeout for bounded unary calls (rpc-compare 2026-07-19: a hung host must not leave callers pending forever). */
@@ -498,6 +516,15 @@ export abstract class AbstractApiClient implements IApiClient {
     providers: (payload, signal) => this.callUnary('llm.providers', payload, signal),
     models: (payload, signal) => this.callUnary('llm.models', payload, signal),
     discoverModels: (payload, signal) => this.callUnary('llm.discoverModels', payload, signal),
+  }
+
+  readonly widgets: IApiClient['widgets'] = {
+    list: (payload, signal) => this.callUnary('widget.list', payload, signal),
+    create: (payload, signal) => this.callUnary('widget.create', payload, signal),
+    read: (payload, signal) => this.callUnary('widget.read', payload, signal),
+    install: (payload, signal) => this.callUnary('widget.install', payload, signal),
+    remove: (payload, signal) => this.callUnary('widget.remove', payload, signal),
+    fetch: (payload, signal) => this.callUnary('widget.fetch', payload, signal),
   }
 
   readonly events: IApiClient['events'] = {

@@ -18,6 +18,7 @@ import type {} from '@deepseek-ai/dsh-permission-presets'
 import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-commands'
 import type {} from '@deepseek-ai/dsh-system-prompt'
+import { WidgetId } from '@deepseek-ai/dsh-widgets'
 import { launchWebScaffold, type WebScaffold } from './scaffold.ts'
 
 const FILE_REFERENCE_PROMPT = fileURLToPath(new URL(
@@ -185,4 +186,32 @@ it('lets a preset producer reach the background-job registry', async () => {
   } finally {
     await handle.dispose()
   }
+}, 120_000)
+
+it('ships the local Widgets provider with offline and networked examples', async () => {
+  scaffold = await launchWebScaffold()
+  const widgets = await scaffold.ctx.widgets.list()
+  expect(widgets.map(widget => ({
+    id: widget.manifest.id,
+    aspectRatios: widget.manifest.aspectRatios,
+    network: widget.manifest.permissions.network,
+  }))).toEqual([
+    { id: 'gold-price', aspectRatios: ['16:9'], network: ['xaus.com'] },
+    { id: 'calculator', aspectRatios: ['1:1'], network: [] },
+  ])
+
+  const calculator = await scaffold.ctx.widgets.read(WidgetId('calculator'))
+  expect(calculator.html).toContain('Calculator keypad')
+  const gold = await scaffold.ctx.widgets.read(WidgetId('gold-price'))
+  expect(gold.html).toContain("window.dshWidget.fetch('https://xaus.com/api/v1/history')")
+
+  const starter = await scaffold.ctx.widgets.create()
+  expect(starter).toMatchObject({
+    manifest: { name: 'New Widget', aspectRatios: ['1:1'], permissions: { network: [] } },
+    builtIn: false,
+  })
+  expect((await scaffold.ctx.widgets.read(starter.manifest.id)).html).toContain('Tell Agent what this should become.')
+  const starterInstructions = readFileSync(`${starter.sourcePath}/AGENTS.md`, 'utf8')
+  expect(starterInstructions).toContain('Apply this workflow to every creation and redesign, including incremental changes.')
+  expect(starterInstructions).toContain('Form one private design read before editing')
 }, 120_000)

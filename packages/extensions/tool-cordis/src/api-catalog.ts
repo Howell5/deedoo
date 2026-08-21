@@ -2105,6 +2105,48 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'widgets',
+    summary: 'Registry and runtime operations for installed Widgets.',
+    description: 'Registry and runtime operations for installed Widgets.',
+    methods: [
+      {
+        signature: 'abstract list(): Promise<WidgetView[]>',
+        description: 'List every valid installed Widget in deterministic name order.',
+        parameters: [],
+        returns: 'validated installed Widget metadata.',
+      },
+      {
+        signature: 'abstract create(): Promise<WidgetView>',
+        description: 'Create one valid managed starter project for Agent authoring.',
+        parameters: [],
+        returns: 'the newly created Widget metadata.',
+      },
+      {
+        signature: 'abstract read(id: WidgetId): Promise<WidgetDocument>',
+        description: 'Read one Widget\'s validated entry document.',
+        parameters: [{ name: 'id', description: 'installed Widget identifier.' }],
+        returns: 'metadata and self-contained HTML.',
+      },
+      {
+        signature: 'abstract install(sourcePath: string): Promise<WidgetView>',
+        description: 'Validate and copy one local static project into managed storage.',
+        parameters: [{ name: 'sourcePath', description: 'absolute source project directory.' }],
+        returns: 'the installed Widget metadata.',
+      },
+      {
+        signature: 'abstract remove(id: WidgetId): Promise<void>',
+        description: 'Remove one managed Widget without deleting any external source directory.',
+        parameters: [{ name: 'id', description: 'installed Widget identifier.' }],
+      },
+      {
+        signature: 'abstract fetch(id: WidgetId, url: string, signal: AbortSignal): Promise<WidgetFetchResult>',
+        description: 'Perform one permission-checked external GET for a Widget.',
+        parameters: [{ name: 'id', description: 'calling Widget identifier.' }, { name: 'url', description: 'absolute HTTPS URL.' }, { name: 'signal', description: 'caller lifetime.' }],
+        returns: 'bounded textual response.',
+      },
+    ],
+  },
+  {
     key: 'workflowEngine',
     summary: 'Workflow Service Definition contract.',
     description: 'Workflow Service Definition contract. Invalid requests throw before publication; a live run is holder-owned, its result never rejects, cancellation and disposal are bounded, and disposal waits for child cleanup within that bound. Lifecycle listener failures are contained, and `workflow/end` fires exactly once as the result settles.',
@@ -2569,6 +2611,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     summary: 'Observe the frozen, lossless-JSON final outcome.',
     description: 'Observe the frozen, lossless-JSON final outcome. Listener failures are contained. Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): keyed by `exec.agent`.',
     parameters: [{ name: 'exec', description: 'the execution object that traversed the pipeline.' }, { name: 'result', description: 'a deep-frozen snapshot of the final returned result.' }],
+  },
+  {
+    name: 'widgets/changed',
+    mode: 'emit',
+    signature: '\'widgets/changed\'(id: WidgetId): void',
+    summary: 'A managed Widget project changed on disk.',
+    description: 'A managed Widget project changed on disk.',
+    parameters: [{ name: 'id', description: 'direct managed project directory id.' }],
   },
   {
     name: 'workflow/agent-end',
@@ -4609,6 +4659,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WebUpgradeRoute',
     declaration: 'export interface WebUpgradeRoute {\n    path: string;\n    handler: (req: IncomingMessage, socket: Duplex, head: Buffer) => void | Promise<void>;\n}',
+  },
+  {
+    name: 'WidgetDocument',
+    declaration: 'export interface WidgetDocument {\n    widget: WidgetView;\n    html: string;\n}',
+  },
+  {
+    name: 'WidgetFetchResult',
+    declaration: 'export interface WidgetFetchResult {\n    status: number;\n    contentType: string;\n    body: string;\n}',
   },
   {
     name: 'WorkflowAgentEndInfo',

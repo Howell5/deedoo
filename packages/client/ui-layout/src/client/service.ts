@@ -14,6 +14,12 @@ import type { createLayoutStore } from './stores.ts'
 /** The layout store's bound action set (framework-baked, draft params peeled). */
 export type PanelActions = BoundActions<ReturnType<typeof createLayoutStore>>
 
+/** Selected feature-owned details surface, bound to one session key. */
+export interface DetailsApplicationSelection {
+  id: string
+  scopeKey: string
+}
+
 /**
  * The outward layout face (`ctx.layout`): the panel transitions other
  * plugins may trigger — and exactly what a test fake must supply. The
@@ -27,11 +33,31 @@ export interface ILayout {
   openDetails(): void
   /** Close the details panel. */
   closeDetails(): void
+  /**
+   * Open a feature-owned details surface for one session key.
+   * @param id - registered `details.application` id.
+   * @param scopeKey - session identity the details surface belongs to.
+   */
+  openApplicationDetails(id: string, scopeKey: string): void
+  /** Current feature-owned details selection, absent for ordinary tool details. */
+  getDetailsApplication(): DetailsApplicationSelection | undefined
+  /** Subscribe to feature-owned details selection changes. */
+  subscribeDetailsApplication(listener: () => void): () => void
+  /** Current first-class center application. */
+  getApplication(): string
+  /** Subscribe to center-application changes. */
+  subscribeApplication(listener: () => void): () => void
+  /** Select a registered center application by stable id. */
+  selectApplication(id: string): void
 }
 
 /** Cross-plugin panel-action face (ctx.layout). */
 export class LayoutController implements ILayout {
   #panels: PanelActions | undefined
+  #application = 'conversation'
+  readonly #applicationListeners = new Set<() => void>()
+  #detailsApplication: DetailsApplicationSelection | undefined
+  readonly #detailsApplicationListeners = new Set<() => void>()
 
   /**
    * Adopt the root entry's bound store actions. Called from the root
@@ -51,12 +77,59 @@ export class LayoutController implements ILayout {
 
   /** Open the details panel (no-op when already open). */
   openDetails(): void {
+    this.#setDetailsApplication(undefined)
     this.#require().openDetails()
   }
 
   /** Close the details panel. */
   closeDetails(): void {
     this.#require().closeDetails()
+    this.#setDetailsApplication(undefined)
+  }
+
+  /** Open a registered feature details surface for one session key. */
+  openApplicationDetails(id: string, scopeKey: string): void {
+    if (id.trim() === '' || scopeKey.trim() === '') {
+      throw new Error('layout: details application id and scope key must be non-empty')
+    }
+    this.#setDetailsApplication({ id, scopeKey })
+    this.#require().openDetails()
+  }
+
+  /** Current feature-owned details selection. */
+  getDetailsApplication = (): DetailsApplicationSelection | undefined => this.#detailsApplication
+
+  /** Subscribe to feature-owned details selection changes. */
+  subscribeDetailsApplication = (listener: () => void): (() => void) => {
+    this.#detailsApplicationListeners.add(listener)
+    return () => { this.#detailsApplicationListeners.delete(listener) }
+  }
+
+  /** Current first-class center application. */
+  getApplication = (): string => this.#application
+
+  /** Subscribe to center-application changes. */
+  subscribeApplication = (listener: () => void): (() => void) => {
+    this.#applicationListeners.add(listener)
+    return () => { this.#applicationListeners.delete(listener) }
+  }
+
+  /** Select a registered center application by stable id. */
+  selectApplication(id: string): void {
+    if (id.trim() === '') throw new Error('layout: application id must be non-empty')
+    if (this.#application === id) return
+    this.#application = id
+    if (id !== 'conversation') this.closeDetails()
+    for (const listener of [...this.#applicationListeners]) listener()
+  }
+
+  #setDetailsApplication(selection: DetailsApplicationSelection | undefined): void {
+    if (
+      this.#detailsApplication?.id === selection?.id
+      && this.#detailsApplication?.scopeKey === selection?.scopeKey
+    ) return
+    this.#detailsApplication = selection
+    for (const listener of [...this.#detailsApplicationListeners]) listener()
   }
 
   #require(): PanelActions {

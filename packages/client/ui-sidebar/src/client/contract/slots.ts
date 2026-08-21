@@ -4,8 +4,8 @@
  * owns column geometry (fold state machine, brand row, New Session);
  * everything between the section header and the list bottom is the
  * `sidebar.workspaces` registrant's (ui-workspace), and the foot is the
- * `sidebar.settings` registrant's (ui-settings), followed by optional footer
- * actions in `sidebar.footer.action`.
+ * application rows, optional footer actions, and the `sidebar.settings`
+ * registrant's trigger.
  */
 import type { PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: pulls ui-layout's SlotMap merge (the 'sidebar' entry) into every
@@ -33,6 +33,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * package's 'sidebar' entry; each action receives only the column state.
      */
     'sidebar.footer.action': { kind: 'list'; scope: 'root'; owner: SidebarFooterActionOwnerProps }
+    /** First-class application navigation rows above Settings. */
+    'sidebar.application': { kind: 'list'; scope: 'root'; owner: SidebarApplicationOwnerProps }
   }
 }
 
@@ -62,6 +64,12 @@ export interface SidebarFooterActionOwnerProps {
   wide: boolean
 }
 
+/** Owner share of a first-class application navigation row. */
+export interface SidebarApplicationOwnerProps {
+  /** Whether the sidebar renders wide content (false = compact rail). */
+  wide: boolean
+}
+
 /**
  * Registrant-private injected share (arrives via the register inject
  * factory). The shell keeps only its own controls: starting a Session from
@@ -85,5 +93,5 @@ export type SidebarRootInjected = {
  */
 export type SidebarRootComponentProps =
   PropsRuntime<'sidebar'>
-  & PropsRenderSlots<'sidebar.workspaces' | 'sidebar.settings' | 'sidebar.footer.action'>
+  & PropsRenderSlots<'sidebar.workspaces' | 'sidebar.application' | 'sidebar.settings' | 'sidebar.footer.action'>
   & SidebarRootInjected & PropsLocale<'sidebar'>

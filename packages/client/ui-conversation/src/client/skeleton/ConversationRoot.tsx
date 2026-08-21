@@ -185,6 +185,11 @@ export function ConversationRoot({
 
   return (
     <div className={css.root} data-phase={phase}>
+      {hero && (
+        <div className={css.heroUtilities}>
+          {renderSlot('conversation.hero.utilities', {})}
+        </div>
+      )}
       {renderSlot('conversation.session.header', {})}
       <div className={css.scrollBody} data-conversation-scroll="">
         {renderSlot('conversation.session', {})}

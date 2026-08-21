@@ -70,6 +70,10 @@ import {
   subagentListRequestSchema,
   subagentPromptRequestSchema,
 } from '../api/subagents.schema.ts'
+import {
+  widgetCreateRequestSchema, widgetFetchRequestSchema, widgetInstallRequestSchema, widgetListRequestSchema,
+  widgetReadRequestSchema, widgetRemoveRequestSchema,
+} from '../api/widgets.schema.ts'
 
 /**
  * Unary dispatch table, keyed by (and compiler-locked to) RpcMethodMap: a map row without a
@@ -140,6 +144,12 @@ const UNARY_ROUTES: UnaryRoutes = {
   'llm.providers': { schema: llmProvidersRequestSchema, invoke: (api, r) => api.llm.providers(r) },
   'llm.models': { schema: llmModelsRequestSchema, invoke: (api, r) => api.llm.models(r) },
   'llm.discoverModels': { schema: llmDiscoverModelsRequestSchema, invoke: (api, r, signal) => api.llm.discoverModels(r, signal) },
+  'widget.list': { schema: widgetListRequestSchema, invoke: (api, r) => api.widgets.list(r) },
+  'widget.create': { schema: widgetCreateRequestSchema, invoke: (api, r) => api.widgets.create(r) },
+  'widget.read': { schema: widgetReadRequestSchema, invoke: (api, r) => api.widgets.read(r) },
+  'widget.install': { schema: widgetInstallRequestSchema, invoke: (api, r) => api.widgets.install(r) },
+  'widget.remove': { schema: widgetRemoveRequestSchema, invoke: (api, r) => api.widgets.remove(r) },
+  'widget.fetch': { schema: widgetFetchRequestSchema, invoke: (api, r, signal) => api.widgets.fetch(r, signal) },
 }
 
 /** Route lookup that narrows an arbitrary path segment to a map key (single cast point for the string→key refinement). */

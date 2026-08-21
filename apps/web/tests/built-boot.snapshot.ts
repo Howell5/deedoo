@@ -28,6 +28,40 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
     .find(el => el?.getAttribute('aria-expanded') !== null)
   if (fixtureGroup === undefined) throw new Error('fixture Workspace group missing')
 
+  // The first-class application path is part of the shipped graph: Widgets
+  // replaces the center without unmounting the Session browser, and selecting
+  // a Session below returns to Conversation.
+  fireEvent.click(await screen.findByRole('button', { name: 'Widgets' }))
+  expect(await screen.findByRole('heading', { name: 'Widgets' })).toBeTruthy()
+  expect(await screen.findByRole('heading', { name: 'Calculator' })).toBeTruthy()
+
+  // New Widget is the Agent-first path: create a managed starter, adopt it as
+  // an ordinary Workspace, and open its blank Session with a live preview.
+  fireEvent.click(await screen.findByRole('button', { name: 'New Widget' }))
+  expect(await within(tree).findByText('New Widget')).toBeTruthy()
+  expect(await screen.findByTitle('New Widget')).toBeTruthy()
+  expect(await screen.findByRole('button', { name: 'Hide Widget preview' })).toBeTruthy()
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Widgets' }))
+
+  // Widget authoring reuses the ordinary Workspace and Session surfaces. The
+  // action itself starts no model turn; it selects Conversation and keeps the
+  // fixed-canvas preview in the generic right details application slot.
+  const calculatorCard = (await screen.findByRole('heading', { name: 'Calculator' })).closest('article')
+  if (calculatorCard === null) throw new Error('Calculator Widget card missing')
+  fireEvent.click(within(calculatorCard).getByRole('button', { name: 'Talk to this Widget' }))
+  expect(await within(tree).findByText('Calculator')).toBeTruthy()
+  expect(await screen.findByTitle('Calculator')).toBeTruthy()
+  expect(await screen.findByRole('button', { name: 'Hide Widget preview' })).toBeTruthy()
+  expect(screen.queryByRole('heading', { name: 'Widgets' })).toBeNull()
+
+  // Blank Widget sessions use Hero chrome instead of the ordinary Session
+  // header. The same persistent utility closes and reopens the preview there.
+  fireEvent.click(screen.getByRole('button', { name: 'Hide Widget preview' }))
+  await waitFor(() => { expect(screen.queryByTitle('Calculator')).toBeNull() })
+  fireEvent.click(await screen.findByRole('button', { name: 'Show Widget preview' }))
+  expect(await screen.findByTitle('Calculator')).toBeTruthy()
+
   // The resident fixture has both a question and an approval; composer routing
   // exposes the question first, and the assembled workspace plugin mirrors that
   // actionable wait instead of the underlying running state.
@@ -41,8 +75,20 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
   // Opening a session reaches chat content through the fixture transport.
   fireEvent.click(waitingTitle)
   await waitFor(() => {
+    expect(screen.queryByTitle('Calculator')).toBeNull()
+  })
+  await waitFor(() => {
     expect(document.querySelector('[data-sample="bash"]')).not.toBeNull()
   }, { timeout: 10_000 })
+
+  // Starting another Session from the ordinary Widget Workspace restores the
+  // Workspace-level preview preference without requiring the Widgets page.
+  const newWidgetSession = tree.querySelector<HTMLButtonElement>('[aria-label="New session in Calculator"]')
+  if (newWidgetSession === null) throw new Error('calculator Workspace new-session action missing')
+  fireEvent.click(newWidgetSession)
+  expect(await screen.findByRole('button', { name: 'Hide Widget preview' })).toBeTruthy()
+  expect(await screen.findByTitle('Calculator')).toBeTruthy()
+  fireEvent.click(waitingTitle)
   // Resolve the resident approval so the ordinary composer bar (which owns
   // ContextMeter) resumes without replacing the session shell. This minimal
   // boot graph intentionally does not mount the separate question UI plugin.

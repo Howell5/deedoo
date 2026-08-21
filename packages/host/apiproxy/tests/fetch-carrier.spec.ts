@@ -16,6 +16,26 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
     }
   }
   return {
+    widgets: {
+      async list(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { widgets: [] } } }
+      },
+      async create(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'widget-error', message: 'disabled', details: { reason: 'unavailable' } } } }
+      },
+      async read(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'widget-error', message: 'missing', details: { reason: 'not-found' } } } }
+      },
+      async install(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'widget-error', message: 'disabled', details: { reason: 'unavailable' } } } }
+      },
+      async remove(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'widget-error', message: 'missing', details: { reason: 'not-found' } } } }
+      },
+      async fetch(request) {
+        return { rpcId: request.rpcId, result: { ok: false, error: { code: 'widget-error', message: 'blocked', details: { reason: 'unavailable' } } } }
+      },
+    },
     sessions: {
       async list(request) {
         if (overrides.crashOn === 'session.list') throw new Error('impl crashed')

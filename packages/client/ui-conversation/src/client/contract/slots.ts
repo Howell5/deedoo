@@ -143,6 +143,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * the next one rather than applied to a current one.
      */
     'conversation.hero.agentPreset': { kind: 'single'; scope: 'root'; owner: HeroAgentPresetOwnerProps }
+    /**
+     * Right-aligned controls shown only on the blank-session Hero. Session
+     * scope keeps the seat absent before a Workspace has produced a Session.
+     */
+    'conversation.hero.utilities': { kind: 'list'; scope: 'session'; owner: ConversationHeroUtilityOwnerProps }
     // 'conversation.input.overlay' merges in ui-input-trigger (the dependency
     // direction is the hard constraint — ui-input-trigger cannot import
     // this package, while this package's input contract already imports
@@ -264,6 +269,9 @@ export interface ConversationSessionOwnerProps {
 
 /** Header actions derive their state from the standard session/global kit. */
 export interface ConversationHeaderActionOwnerProps {}
+
+/** Hero utilities derive their state from the standard Session kit. */
+export interface ConversationHeroUtilityOwnerProps {}
 
 /**
  * The input-region slot currency: dock/left/right entries read
@@ -575,6 +583,7 @@ export type ConversationSlotProps =
     | 'conversation.input.left' | 'conversation.input.right'
     | 'conversation.hero.workspace'
     | 'conversation.hero.agentPreset'
+    | 'conversation.hero.utilities'
   >
   & InjectFace<ConversationInjected>
   & PropsLocale<'conversation'>

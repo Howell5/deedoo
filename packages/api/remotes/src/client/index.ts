@@ -26,6 +26,7 @@ export type {} from '@deepseek-ai/dsh-credentials/types'
 export type {} from '@deepseek-ai/dsh-llm/types'
 export type {} from '@deepseek-ai/dsh-agent-presets/types'
 export type {} from '@deepseek-ai/dsh-settings/types'
+export type {} from '@deepseek-ai/dsh-widgets/types'
 
 /**
  * The carrier's Client-facing types, re-exported so a business package names one
@@ -41,6 +42,7 @@ export type {
   SessionSummary, SettingsNamespaceView, SettingsPathOpView, SkillEntry, StreamChunk,
   SubagentAddress, SubagentCatalog, JobView, ToolCallView, ToolEventView, ToolResultView,
   WorkspaceId, WorkspaceView,
+  WidgetManifestView, WidgetView,
 } from '@deepseek-ai/dsh-client-connection/client'
 export type {} from '@deepseek-ai/dsh-api-gateway/client'
 export type {} from '@deepseek-ai/dsh-cordis-host-runner/remote'
