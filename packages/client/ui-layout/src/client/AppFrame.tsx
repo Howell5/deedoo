@@ -7,21 +7,29 @@
  * session-aware occupants render in fixed column positions; strict entries
  * gate themselves on current-session availability while session-maybe
  * entries retain identity. Pure component: everything arrives
- * through the three framework shares — zero cordis or framework imports,
+ * through framework shares and injected application selectors — zero Cordis or framework imports,
  * zero self-made hooks.
  */
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import type { PropsRenderSlots, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots'
 import { computeColumns, SIDEBAR_AUTO_COLLAPSE, SIDEBAR_DEFAULT } from './columns.ts'
 import type { createLayoutStore } from './stores.ts'
+import type { DetailsApplicationSelection } from './service.ts'
 import css from './AppFrame.module.css'
 
 /** Full composed props: runtime share + child-slot render share + store share. */
 export type AppFrameProps =
   & PropsRuntime<'root'>
-  & PropsRenderSlots<'sidebar' | 'conversation' | 'details' | 'shell.overlay'>
+  & PropsRenderSlots<'sidebar' | 'conversation' | 'application' | 'details' | 'details.application' | 'shell.overlay'>
   & PropsStore<ReturnType<typeof createLayoutStore>>
+  & {
+    getApplication: () => string
+    subscribeApplication: (listener: () => void) => () => void
+    getDetailsApplication: () => DetailsApplicationSelection | undefined
+    subscribeDetailsApplication: (listener: () => void) => () => void
+    closeDetails: () => void
+  }
 
 /** Center column grid item (session-body building block). */
 function CenterColumn(props: { children?: ReactNode }) {
@@ -83,17 +91,28 @@ function DragHandle(props: { side: 'sidebar' | 'details'; left: number; onStart:
   )
 }
 
-/** The three-column frame (see module doc). */
+/** The three-column frame with selectable center applications (see module doc). */
 export function AppFrame({
   useStore,
   useSessions,
   actions,
   renderSlot,
+  getApplication,
+  subscribeApplication,
+  getDetailsApplication,
+  subscribeDetailsApplication,
+  closeDetails,
 }: AppFrameProps) {
   const panels = useStore(s => s)
+  const application = useSyncExternalStore(subscribeApplication, getApplication, getApplication)
+  const detailsApplication = useSyncExternalStore(
+    subscribeDetailsApplication,
+    getDetailsApplication,
+    getDetailsApplication,
+  )
   const detailsSession = useSessions((s) => {
     const current = s.current
-    return current !== undefined && s.byId[current]?.blank === false ? current : undefined
+    return current !== undefined && s.byId[current] !== undefined ? current : undefined
   })
   const frameRef = useRef<HTMLDivElement | null>(null)
   const [viewport, setViewport] = useState(() => window.innerWidth)
@@ -102,10 +121,10 @@ export function AppFrame({
   useLayoutEffect(() => {
     if (detailsSession === undefined) return
     if (lastSession.current !== undefined && lastSession.current !== detailsSession) {
-      actions.closeDetails()
+      if (detailsApplication?.scopeKey !== detailsSession) closeDetails()
     }
     lastSession.current = detailsSession
-  }, [actions, detailsSession])
+  }, [closeDetails, detailsApplication?.scopeKey, detailsSession])
 
   // Track the frame's own box (not the window): rAF-throttled ResizeObserver.
   useEffect(() => {
@@ -139,7 +158,11 @@ export function AppFrame({
   const sidebarPreference = sidebarCollapsed
     ? 0
     : panels.sidebar === 0 ? SIDEBAR_DEFAULT : panels.sidebar
-  const cols = computeColumns(viewport, sidebarPreference, detailsSession === undefined ? 0 : panels.details)
+  const cols = computeColumns(
+    viewport,
+    sidebarPreference,
+    application !== 'conversation' || detailsSession === undefined ? 0 : panels.details,
+  )
   const colsRef = useRef(cols)
   colsRef.current = cols
 
@@ -187,8 +210,19 @@ export function AppFrame({
             the shell's own pending rendering. The conversation
             is session-maybe; the strict details entry naturally renders
             empty while no session is current. */}
-        <CenterColumn>{renderSlot('conversation', {})}</CenterColumn>
-        <DetailsColumn>{renderSlot('details', {})}</DetailsColumn>
+        <CenterColumn>
+          <div className={css.applicationLayer} hidden={application !== 'conversation'}>
+            {renderSlot('conversation', {})}
+          </div>
+          <div className={css.applicationLayer} hidden={application === 'conversation'}>
+            {renderSlot('application', { active: application })}
+          </div>
+        </CenterColumn>
+        <DetailsColumn>
+          {detailsApplication !== undefined && detailsApplication.scopeKey === detailsSession
+            ? renderSlot('details.application', { active: detailsApplication.id })
+            : renderSlot('details', {})}
+        </DetailsColumn>
       </>
       <div className={css.overlayLayer} data-shell-overlay>
         {renderSlot('shell.overlay', {})}

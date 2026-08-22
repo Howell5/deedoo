@@ -100,6 +100,7 @@ import type {
 } from '@deepseek-ai/dsh-user-questions'
 import { UserQuestionError } from '@deepseek-ai/dsh-user-questions'
 import { DirectoryPickerError } from '@deepseek-ai/dsh-host-directory-picker'
+import { WidgetError, WidgetId as brandWidgetId } from '@deepseek-ai/dsh-widgets'
 import {
   ApiRemoteSessionNotFound as SessionNotFound,
   ApiRemoteSubagentSessionOwnership as SubagentSessionOwnership,
@@ -637,6 +638,18 @@ function directoryError(error: unknown): RpcError {
     return { code: error.code, message: error.message, details: { path: error.path } }
   }
   return { code: 'internal', message: error instanceof Error ? error.message : String(error), details: {} }
+}
+
+/** Map Widget provider failures onto one wire code without exposing filesystem internals. */
+function widgetRpcError(error: unknown): RpcError {
+  if (error instanceof WidgetError) {
+    return { code: 'widget-error', message: error.message, details: { reason: error.code } }
+  }
+  return {
+    code: 'internal',
+    message: error instanceof Error ? error.message : String(error),
+    details: {},
+  }
 }
 
 /** Resolved Agent model and project-directory defaults consumed by the API implementation. */
@@ -2928,6 +2941,62 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           })
         }
         return ok(request, { archivedSessionIds: [...ctx.workspaceRegistry.archivedSessionIds] })
+      },
+    },
+
+    widgets: {
+      async list(request) {
+        try {
+          return ok(request, { widgets: await ctx.widgets.list() })
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
+      },
+
+      async create(request) {
+        try {
+          return ok(request, { widget: await ctx.widgets.create() })
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
+      },
+
+      async read(request) {
+        try {
+          const document = await ctx.widgets.read(brandWidgetId(request.payload.id))
+          return ok(request, { widget: document.widget, html: document.html })
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
+      },
+
+      async install(request) {
+        try {
+          return ok(request, { widget: await ctx.widgets.install(request.payload.path) })
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
+      },
+
+      async remove(request) {
+        try {
+          await ctx.widgets.remove(brandWidgetId(request.payload.id))
+          return ok(request, { removed: true as const })
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
+      },
+
+      async fetch(request, signal) {
+        try {
+          return ok(request, await ctx.widgets.fetch(
+            brandWidgetId(request.payload.id),
+            request.payload.url,
+            signal,
+          ))
+        } catch (error) {
+          return err(request, widgetRpcError(error))
+        }
       },
     },
 

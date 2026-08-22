@@ -23,8 +23,14 @@ import type {
 
 // Session selection controls for the SessionProvider and useSessions stubs.
 const selectedSession = { current: 's-test' as SessionId | undefined }
-const selectedSessionBlank = { current: false }
 const baselinesReady = { current: true }
+const getApplication = (): 'conversation' => 'conversation'
+const subscribeApplication = (_listener: () => void): (() => void) => () => {}
+const selectedDetailsApplication = {
+  current: undefined as { id: string; scopeKey: string } | undefined,
+}
+const getDetailsApplication = () => selectedDetailsApplication.current
+const subscribeDetailsApplication = (_listener: () => void): (() => void) => () => {}
 
 // Render-prop contract stub fed through the standard seat prop (the renderer
 // injects the real one in production): session mode runs children(id), empty
@@ -61,6 +67,7 @@ function mountFrame() {
     if (key === 'sidebar') return <div data-testid="sidebar-content" />
     if (key === 'conversation') return <div data-testid="center-content" />
     if (key === 'details') return <div data-testid="details-content" />
+    if (key === 'details.application') return <div data-testid="feature-details-content" />
     if (key === 'conversation.empty') return <div data-testid="empty-content" />
     return <div data-testid="other-content" />
   }) as AppFrameProps['renderSlot']
@@ -70,7 +77,7 @@ function mountFrame() {
       ids: current === undefined ? [] : [current],
       byId: current === undefined
         ? {}
-        : { [current]: { id: current, displayTitle: 'Test', running: false, blank: selectedSessionBlank.current, updatedAt: 1 } },
+        : { [current]: { id: current, displayTitle: 'Test', running: false, blank: false, updatedAt: 1 } },
       current,
       phase: 'ready',
     } as SessionListState
@@ -88,6 +95,11 @@ function mountFrame() {
       useSessions={useSessions}
       useWorkspaces={((sel: (s: WorkspaceListState) => unknown) => sel(workspaceState)) as never}
       SessionProvider={SessionProviderStub}
+      getApplication={getApplication}
+      subscribeApplication={subscribeApplication}
+      getDetailsApplication={getDetailsApplication}
+      subscribeDetailsApplication={subscribeDetailsApplication}
+      closeDetails={() => { instance.actions.closeDetails() }}
     />
   )
   const utils = render(element())
@@ -113,7 +125,7 @@ function drag(handle: Element, fromX: number, toX: number): void {
 beforeEach(() => {
   frameWidth = 1920
   selectedSession.current = 's-test' as SessionId
-  selectedSessionBlank.current = false
+  selectedDetailsApplication.current = undefined
   baselinesReady.current = true
   vi.useFakeTimers()
   vi.stubGlobal('ResizeObserver', ResizeObserverStub)
@@ -154,6 +166,14 @@ describe('AppFrame', () => {
     expect(slotCalls.find(c => c.key === 'details')!.props).toEqual({})
   })
 
+  it('renders a selected feature details surface only for its bound session', () => {
+    selectedDetailsApplication.current = { id: 'widgets', scopeKey: 's-test' }
+    const { slotCalls, getByTestId } = mountFrame()
+    expect(getByTestId('feature-details-content')).toBeTruthy()
+    expect(slotCalls.find(c => c.key === 'details.application')?.props).toEqual({ active: 'widgets' })
+    expect(slotCalls.map(c => c.key)).not.toContain('details')
+  })
+
   it('keeps the conversation slot mounted while no session is current', () => {
     // No current session: the session-maybe conversation shell owns the New
     // Session view itself — the center column renders it unconditionally.
@@ -172,7 +192,7 @@ describe('AppFrame', () => {
     expect(slotCalls.map(c => c.key)).toContain('details')
   })
 
-  it('ignores unselected states and closes only when the Session id changes', () => {
+  it('hides details without a selection and closes when the Session id changes', () => {
     const { frame, instance, rerenderFrame } = mountFrame()
     expect(tracks(frame)).toEqual([280, 0])
 
@@ -184,20 +204,12 @@ describe('AppFrame', () => {
     expect(tracks(frame)).toEqual([280, 0])
 
     act(() => { instance.actions.openDetails() })
-    selectedSession.current = 's-blank' as SessionId
-    selectedSessionBlank.current = true
-    act(() => { rerenderFrame() })
-    expect(tracks(frame)).toEqual([280, 0])
-    expect(instance.getSnapshot().details).toBe(360)
-
-    selectedSession.current = 's-next' as SessionId
-    selectedSessionBlank.current = false
-    act(() => { rerenderFrame() })
     expect(tracks(frame)).toEqual([280, 360])
 
     selectedSession.current = undefined
     act(() => { rerenderFrame() })
     expect(tracks(frame)).toEqual([280, 0])
+    expect(instance.getSnapshot().details).toBe(360)
     selectedSession.current = 's-test' as SessionId
     act(() => { rerenderFrame() })
     expect(tracks(frame)).toEqual([280, 0])

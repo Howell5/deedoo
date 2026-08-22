@@ -148,6 +148,50 @@ export class FakeApiClient implements IApiClient {
     openPath: payload => this.record('host.openPath', payload, this.onOpenPath(payload)),
   }
 
+  readonly widgets: IApiClient['widgets'] = {
+    list: payload => this.record('widget.list', payload, Promise.resolve(ok({ widgets: [] }))),
+    create: payload => this.record('widget.create', payload, Promise.resolve(ok({
+      widget: {
+        manifest: {
+          schemaVersion: 1, id: 'widget-new', name: 'New Widget', version: '0.1.0',
+          runtime: 'static', entry: 'dist/index.html', aspectRatios: ['1:1'], defaultAspectRatio: '1:1',
+          permissions: { network: [] }, refresh: { mode: 'manual', minimumIntervalSeconds: 30 },
+        },
+        sourcePath: '/fixture/widget-new',
+        builtIn: false,
+      },
+    }))),
+    read: payload => this.record('widget.read', payload, Promise.resolve(ok({
+      widget: {
+        manifest: {
+          schemaVersion: 1, id: payload.id, name: 'Fixture', version: '1',
+          runtime: 'static', entry: 'dist/index.html', aspectRatios: ['1:1'], defaultAspectRatio: '1:1',
+          permissions: { network: [] }, refresh: { mode: 'manual', minimumIntervalSeconds: 30 },
+        },
+        sourcePath: '/fixture',
+        builtIn: false,
+      },
+      html: '<!doctype html>',
+    }))),
+    install: payload => this.record('widget.install', payload, Promise.resolve(ok({
+      widget: {
+        manifest: {
+          schemaVersion: 1, id: 'fixture', name: 'Fixture', version: '1',
+          runtime: 'static', entry: 'dist/index.html', aspectRatios: ['1:1'], defaultAspectRatio: '1:1',
+          permissions: { network: [] }, refresh: { mode: 'manual', minimumIntervalSeconds: 30 },
+        },
+        sourcePath: '/fixture',
+        builtIn: false,
+      },
+    }))),
+    remove: payload => this.record('widget.remove', payload, Promise.resolve(ok({ removed: true as const }))),
+    fetch: payload => this.record('widget.fetch', payload, Promise.resolve(ok({
+      status: 200,
+      contentType: 'application/json',
+      body: '{}',
+    }))),
+  }
+
   readonly workspace: IApiClient['workspace'] = {
     list: (payload: unknown) => this.record('workspace.list', payload, Promise.resolve(ok({ items: [], archivedSessionIds: [] }))),
     create: (payload: unknown) => this.record('workspace.create', payload, Promise.resolve(ok({

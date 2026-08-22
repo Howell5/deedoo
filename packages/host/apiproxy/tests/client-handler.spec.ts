@@ -28,12 +28,22 @@ function scriptedApi(overrides: {
   settings?: Partial<ApiProxy['settings']>
   credentials?: Partial<ApiProxy['credentials']>
   llm?: Partial<ApiProxy['llm']>
+  widgets?: Partial<ApiProxy['widgets']>
   respond?: ApiProxy['respond']
 } = {}): ApiProxy {
   async function *empty<F>(): AsyncGenerator<RpcRequest<F>> { /* no frames */ }
   const err = <T>(r: RpcRequest<unknown>): Promise<RpcResponse<T>> =>
     Promise.resolve({ rpcId: r.rpcId, result: { ok: false, error: { code: 'internal' as const, message: 'stub', details: {} } } })
   return {
+    widgets: {
+      list: r => ok(r, { widgets: [] }),
+      create: r => err(r),
+      read: r => err(r),
+      install: r => err(r),
+      remove: r => err(r),
+      fetch: r => err(r),
+      ...overrides.widgets,
+    },
     sessions: {
       list: r => ok(r, { items: [] }),
       search: r => ok(r, { items: [], hasMore: false }),
@@ -148,6 +158,27 @@ function recorderInto(seen: { method: string; payload: unknown }[]) {
 }
 
 describe('unary round trip', () => {
+  it('creates a Widget through the typed carrier', async () => {
+    const widget = {
+      manifest: {
+        schemaVersion: 1 as const,
+        id: 'widget-new',
+        name: 'New Widget',
+        version: '0.1.0',
+        runtime: 'static' as const,
+        entry: 'dist/index.html',
+        aspectRatios: ['1:1' as const],
+        defaultAspectRatio: '1:1' as const,
+        permissions: { network: [] },
+        refresh: { mode: 'manual' as const, minimumIntervalSeconds: 30 },
+      },
+      sourcePath: '/widgets/widget-new',
+      builtIn: false,
+    }
+    const response = await client(scriptedApi({ widgets: { create: r => ok(r, { widget }) } })).widgets.create({})
+    expect(response.result).toEqual({ ok: true, value: { widget } })
+  })
+
   it('carries payload out and value back through the full wire form', async () => {
     let seen: RpcRequest<{ cursor?: string }> | undefined
     const api = scriptedApi({

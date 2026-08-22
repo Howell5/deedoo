@@ -34,7 +34,7 @@ import { deriveEventMessage, foldSurface } from '@deepseek-ai/dsh-session/surfac
 import type {
   ApiProxy, ClientRequest, ClientResponse, HistoryEntry, HostFrame, MuxFrame, RpcReceipt,
   ModelProviderGroup, ModelSelection, RpcRequest, RpcResponse, RpcResult, ServerRequest, ServerResponse, SessionSummary,
-  ToolCallView, ToolEventView, ToolResultView, WorkspaceId, WorkspaceView,
+  ToolCallView, ToolEventView, ToolResultView, WidgetView, WorkspaceId, WorkspaceView,
 } from './api.ts'
 import type { RequestPayload, ResponseValue, RpcMethodMap } from '@deepseek-ai/dsh-host-apiproxy/api'
 import { AbstractApiClient, RpcId, SESSION_SEARCH_RESULT_LIMIT } from './api.ts'
@@ -2176,7 +2176,78 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
     replays.set(id, { timer: setTimeout(tick, 80), finish })
   }
 
+  const fixtureWidget: WidgetView = {
+    manifest: {
+      schemaVersion: 1,
+      id: 'calculator',
+      name: 'Calculator',
+      version: '1.0.0',
+      runtime: 'static',
+      entry: 'dist/index.html',
+      aspectRatios: ['1:1'],
+      defaultAspectRatio: '1:1',
+      permissions: { network: [] },
+      refresh: { mode: 'manual', minimumIntervalSeconds: 30 },
+    },
+    sourcePath: `${FIXTURE_HOME}/Widgets/calculator`,
+    builtIn: true,
+  }
+  const fixtureWidgets = [fixtureWidget]
+  let nextWidget = 1
+
   const api: ApiProxy = {
+    widgets: {
+      list: request => ok(request, { widgets: [...fixtureWidgets] }),
+      create: (request) => {
+        const id = `widget-${nextWidget++}`
+        const widget: WidgetView = {
+          manifest: {
+            schemaVersion: 1,
+            id,
+            name: 'New Widget',
+            version: '0.1.0',
+            runtime: 'static',
+            entry: 'dist/index.html',
+            aspectRatios: ['1:1'],
+            defaultAspectRatio: '1:1',
+            permissions: { network: [] },
+            refresh: { mode: 'manual', minimumIntervalSeconds: 30 },
+          },
+          sourcePath: `${FIXTURE_HOME}/Widgets/${id}`,
+          builtIn: false,
+        }
+        fixtureWidgets.push(widget)
+        return ok(request, { widget })
+      },
+      read: (request) => {
+        const widget = fixtureWidgets.find(candidate => candidate.manifest.id === request.payload.id)
+        return widget === undefined
+          ? err(request, {
+            code: 'widget-error',
+            message: `fixture has no Widget '${request.payload.id}'`,
+            details: { reason: 'not-found' },
+          })
+          : ok(request, {
+            widget,
+            html: `<!doctype html><html><head><style>html,body{margin:0;width:100%;height:100%;overflow:hidden}</style></head><body><main>Fixture ${widget.manifest.name}</main></body></html>`,
+          })
+      },
+      install: request => err(request, {
+        code: 'widget-error',
+        message: `fixture cannot import '${request.payload.path}'`,
+        details: { reason: 'unavailable' },
+      }),
+      remove: request => err(request, {
+        code: 'widget-error',
+        message: `fixture has no Widget '${request.payload.id}'`,
+        details: { reason: 'not-found' },
+      }),
+      fetch: request => err(request, {
+        code: 'widget-error',
+        message: `fixture blocks Widget network request '${request.payload.url}'`,
+        details: { reason: 'unavailable' },
+      }),
+    },
     sessions: {
       list: request => ok(request, { items: [...sessions].sort((a, b) => b.updatedAt - a.updatedAt) }),
       search: (request, signal) => {
@@ -3098,6 +3169,12 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'host.listDirectory': return this.api.host.listDirectory(request, new AbortController().signal)
       case 'host.createDirectory': return this.api.host.createDirectory(request)
       case 'host.openPath': return this.api.host.openPath(request, new AbortController().signal)
+      case 'widget.list': return this.api.widgets.list(request)
+      case 'widget.create': return this.api.widgets.create(request)
+      case 'widget.read': return this.api.widgets.read(request)
+      case 'widget.install': return this.api.widgets.install(request)
+      case 'widget.remove': return this.api.widgets.remove(request)
+      case 'widget.fetch': return this.api.widgets.fetch(request, signal)
       case 'workspace.list': return this.api.workspace.list(request)
       case 'workspace.create': return this.api.workspace.create(request)
       case 'workspace.rename': return this.api.workspace.rename(request)

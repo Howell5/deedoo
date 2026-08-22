@@ -93,6 +93,9 @@
       "path": "../../workspace/workspace"
     },
     {
+      "path": "../../widget/widgets"
+    },
+    {
       "path": "../directory-picker"
     },
     {

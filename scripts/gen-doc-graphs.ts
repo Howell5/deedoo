@@ -79,6 +79,7 @@ const GROUP_ORDER = [
   'tasks',
   'workflow',
   'web',
+  'widget',
   'spill',
   'todo',
   'plan',
@@ -236,6 +237,15 @@ const SERVICE_ROLES: ServiceRole[] = [
     mode: 'core',
     consumers: ['apiproxy'],
     note: 'Owns WorkspaceId-branded records over the domain facility; stable sessionIds accounts drive Host RPC and GUI projections.',
+  },
+  {
+    key: 'widgets',
+    pkg: 'widgets',
+    title: 'Local static mini-application seam',
+    mode: 'seam',
+    implementations: ['widgets-local'],
+    consumers: ['apiproxy'],
+    note: 'The Service Definition owns strict manifests and lifecycle operations; the local provider owns managed files and network policy, while the Host gateway exposes the browser-safe RPC domain.',
   },
   {
     key: 'sessionQuery',

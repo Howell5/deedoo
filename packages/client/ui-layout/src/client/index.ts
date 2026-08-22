@@ -21,7 +21,7 @@ import { ThemePresenter } from './theme-presenter.ts'
 // OwnerShare contracts below are the render-side halves registrants compose
 // against; the frame components and the store factory are package-internal.
 export { LayoutController } from './service.ts'
-export type { ILayout } from './service.ts'
+export type { DetailsApplicationSelection, ILayout } from './service.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -61,6 +61,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'conversation': { kind: 'single'; scope: 'session-maybe'; owner: ConvOwnerProps }
     /**
+     * Additive first-class application seat for center surfaces other than
+     * Conversation. Registrants receive the selected application id.
+     */
+    'application': { kind: 'list'; scope: 'root'; owner: ApplicationOwnerProps }
+    /**
      * The right details column, shown when the layout opens it. OCCUPIED by
      * ui-conversation's DetailsPanel, which declares the tool-details seat
      * inside it — registering here replaces the column and takes that seat
@@ -70,6 +75,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * `session` scope, and `ctx.layout` owns whether the column is open.
      */
     'details': { kind: 'single'; scope: 'session'; owner: DetailsOwnerProps }
+    /**
+     * Additive feature-owned details surfaces. `ctx.layout` selects one entry
+     * for one session key; ordinary tool details continue to use `details`.
+     */
+    'details.application': { kind: 'list'; scope: 'session'; owner: DetailsApplicationOwnerProps }
     /**
      * Frame-wide floating layer, above every column and outside their scroll
      * containers. Deliberately generic and unowned by any feature: a badge, a
@@ -101,15 +111,27 @@ export interface SidebarOwnerProps {
 /** Conversation owner share: business state and actions belong to the registrant. */
 export interface ConvOwnerProps {}
 
+/** Application owner share: stable selected application id. */
+export interface ApplicationOwnerProps {
+  /** Current application selected through ctx.layout. */
+  active: string
+}
+
 /** Details owner share: empty — sessionId arrives as a framework-standard prop. */
 export interface DetailsOwnerProps {}
+
+/** Feature details owner share: stable selected details application id. */
+export interface DetailsApplicationOwnerProps {
+  /** Current details application selected through ctx.layout. */
+  active: string
+}
 
 /** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
 export const inject = ['slots', 'theme']
 
 /**
  * Client plugin body: provide ctx.layout, then one register() call — AppFrame
- * into 'root' with the four child-slot declarations, the layout store seat,
+ * into 'root' with the five child-slot declarations, the layout store seat,
  * and the inject hook that hands the store's bound actions to the service.
  * @param ctx - client root context.
  */
@@ -122,7 +144,9 @@ export function apply(ctx: ClientContext): void {
       children: {
         'sidebar': { kind: 'single', scope: 'root' },
         'conversation': { kind: 'single', scope: 'session-maybe' },
+        'application': { kind: 'list', scope: 'root' },
         'details': { kind: 'single', scope: 'session' },
+        'details.application': { kind: 'list', scope: 'session' },
         'shell.overlay': { kind: 'list', scope: 'root' },
       },
       // Exclusive store: the factory itself — the framework instantiates per
@@ -132,7 +156,13 @@ export function apply(ctx: ClientContext): void {
       // conversation business actions belong to their registrants.
       inject: (actions: PanelActions) => {
         layout.attachPanels(actions)
-        return {}
+        return {
+          getApplication: layout.getApplication,
+          subscribeApplication: layout.subscribeApplication,
+          getDetailsApplication: layout.getDetailsApplication,
+          subscribeDetailsApplication: layout.subscribeDetailsApplication,
+          closeDetails: () => { layout.closeDetails() },
+        }
       },
     }, AppFrame)
     return () => {
